@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "visa-direct-sdk"
+version = "0.1.0"
+description = "Visa Direct SDK (Python)"
+authors = [{ name = "Visa Direct Team" }]
+requires-python = ">=3.9"
+dependencies = [
+	"requests>=2.31.0",
+	"jwcrypto>=1.5.6"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["visa_direct_sdk*"]
+
+[project.optional-dependencies]
+dev = []

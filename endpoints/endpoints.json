@@ -1,0 +1,51 @@
+{
+  "baseUrls": {
+    "visa": "${VISA_BASE_URL:-https://api.visa.com}"
+  },
+  "routes": [
+    {
+      "path": "/visadirect/fundstransfer/v1/pullfunds",
+      "requiresMLE": false
+    },
+    {
+      "path": "/visadirect/fundstransfer/v1/pushfunds",
+      "requiresMLE": false
+    },
+    {
+      "path": "/accountpayouts/v1/payout",
+      "requiresMLE": false
+    },
+    {
+      "path": "/walletpayouts/v1/payout",
+      "requiresMLE": false
+    },
+    {
+      "path": "/visapayouts/v3/payouts/:id",
+      "requiresMLE": false
+    }
+    ,{
+      "path": "/visaaliasdirectory/v1/resolve",
+      "requiresMLE": false
+    }
+    ,{
+      "path": "/pav/v1/card/validation",
+      "requiresMLE": false
+    }
+    ,{
+      "path": "/paai/v1/fundstransfer/attributes/inquiry",
+      "requiresMLE": false
+    }
+    ,{
+      "path": "/visapayouts/v3/payouts/validate",
+      "requiresMLE": false
+    }
+    ,{
+      "path": "/forexrates/v1/lock",
+      "requiresMLE": false
+    }
+  ],
+  "jwks": {
+    "url": "${VISA_JWKS_URL:-https://api.visa.com/jwks}",
+    "cacheTtlSeconds": 300
+  }
+}

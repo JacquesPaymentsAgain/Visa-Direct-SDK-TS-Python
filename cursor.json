@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "workspaces": [
+    {
+      "name": "Visa Direct TypeScript SDK",
+      "path": "typescript-sdk",
+      "openFiles": [
+        "src/core/orchestrator.ts",
+        "src/dx/builder.ts",
+        "src/transport/secureHttpClient.ts",
+        "../SPEC.md",
+        "../endpoints/endpoints.json"
+      ],
+      "commands": [
+        {
+          "label": "Build",
+          "command": "npm run build",
+          "cwd": "typescript-sdk"
+        },
+        {
+          "label": "Run Example (FI -> Card)",
+          "command": "node dist/examples/fi_internal_to_card.js",
+          "cwd": "typescript-sdk"
+        }
+      ]
+    },
+    {
+      "name": "Visa Direct Python SDK",
+      "path": "python-sdk",
+      "openFiles": [
+        "visa_direct_sdk/core/orchestrator.py",
+        "visa_direct_sdk/dx/builder.py",
+        "visa_direct_sdk/transport/secure_http_client.py",
+        "../SPEC.md",
+        "../endpoints/endpoints.json"
+      ],
+      "commands": [
+        {
+          "label": "Run Example (FI -> Card)",
+          "command": "python examples/fi_internal_to_card.py",
+          "cwd": "python-sdk"
+        }
+      ]
+    },
+    {
+      "name": "Simulator",
+      "path": "simulator",
+      "openFiles": [
+        "app.py",
+        "../endpoints/endpoints.json"
+      ],
+      "commands": [
+        {
+          "label": "Start Simulator",
+          "command": "python app.py",
+          "cwd": "simulator"
+        }
+      ]
+    }
+  ],
+  "instructions": [
+    "Use SPEC.md as the source of truth for orchestrator behavior and guardrails.",
+    "Before production, replace placeholder endpoints in endpoints/endpoints.json and implement mTLS + JWE in SecureHttpClient stubs.",
+    "Run the simulator first, then build/run examples in TS and Python."
+  ]
+}
