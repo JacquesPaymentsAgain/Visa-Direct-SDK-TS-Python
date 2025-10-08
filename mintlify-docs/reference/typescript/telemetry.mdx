@@ -1,0 +1,33 @@
+---
+title: 'Telemetry'
+description: 'OpenTelemetry helpers for the TypeScript SDK'
+---
+
+## Overview
+
+Use the built-in OpenTelemetry utilities to instrument demo flows and forward traces to your chosen exporter.
+
+## Initializing
+
+```typescript
+import { initOtel } from 'visa-direct-sdk';
+
+initOtel(); // console exporter by default
+```
+
+## Manual Spans
+
+```typescript
+import { withSpan } from 'visa-direct-sdk';
+
+await withSpan('demo.payout', async (span) => {
+  span?.setAttribute('demo.corridor', 'GB-IN');
+  await builder
+    .withIdempotencyKey('otel-demo')
+    .execute();
+});
+```
+
+## Environment Controls
+
+Set `OTEL_DISABLED=1` to disable instrumentation without code changes. Swap exporters by wiring your own span processor before calling `initOtel()`.

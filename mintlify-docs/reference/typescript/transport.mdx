@@ -1,0 +1,55 @@
+---
+title: 'SecureHttpClient (TypeScript)'
+description: 'mTLS + MLE transport for the TypeScript SDK'
+---
+
+## Overview
+
+`SecureHttpClient` wraps Axios with mTLS, MLE/JWE, JWKS caching, and retry logic.
+
+## Basic Usage
+
+```typescript
+import { SecureHttpClient } from 'visa-direct-sdk';
+
+const client = new SecureHttpClient({
+  baseUrl: 'https://sandbox.api.visa.com',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/visa-ca.pem'
+});
+```
+
+## Parameters
+
+<ParamField path="SecureHttpClient" type="object">
+  <Param path="baseUrl" type="string" required>
+    Visa Direct base URL.
+  </Param>
+  <Param path="certPath" type="string" required>
+    Client certificate path (PEM).
+  </Param>
+  <Param path="keyPath" type="string" required>
+    Client private key path (PEM).
+  </Param>
+  <Param path="caPath" type="string">
+    CA bundle path.
+  </Param>
+  <Param path="endpointsFile" type="string">
+    Optional endpoints JSON override (useful for the simulator).
+  </Param>
+</ParamField>
+
+## Adding Headers
+
+Use Axios interceptors to inject Visa API signatures:
+
+```typescript
+client.addRequestHook?.((config) => {
+  config.headers = {
+    ...config.headers,
+    'x-api-key': process.env.VISA_API_KEY ?? ''
+  };
+  return config;
+});
+```

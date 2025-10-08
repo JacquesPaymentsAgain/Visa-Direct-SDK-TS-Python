@@ -1,309 +1,270 @@
 # Visa Direct SDK & Orchestrator
 
-A unified Visa Direct SDK with TypeScript and Python implementations, featuring a Core Orchestrator with strict guardrails, DX Fluent Builder, secure transport layer with mTLS/JWE support, and production-grade features.
-
-## 🎯 Project Overview
-
-This SDK provides:
-- **Core Orchestrator**: Executes payouts to Card (OCT), Account, and Wallet with strict guardrails
-- **DX Fluent Builder**: Guides developers but delegates to orchestrator (no parallel logic)
-- **Secure Transport**: Supports mTLS and MLE/JWE controlled by `endpoints/endpoints.json`
-- **Production Features**: Idempotency, single-use funding receipts, compensation events, preflight caching, FX policy enforcement
-
-## 📁 Repository Structure
-
-```
-├── typescript-sdk/          # TypeScript SDK implementation
-│   ├── src/
-│   │   ├── core/           # Orchestrator with guards & routing
-│   │   ├── dx/             # Fluent builder (delegates to orchestrator)
-│   │   ├── transport/      # Secure HTTP client with MLE/JWE
-│   │   ├── services/       # Preflight services (alias, PAV, FTAI)
-│   │   ├── storage/        # Pluggable stores (idempotency, receipts, cache)
-│   │   ├── types/          # Error classes
-│   │   ├── utils/          # Events & validation
-│   │   └── tests/          # Test suites
-│   └── dist/               # Compiled output
-├── python-sdk/             # Python SDK implementation
-│   └── visa_direct_sdk/    # Mirror structure of TS SDK
-├── simulator/              # Flask simulator for testing
-├── endpoints/              # Configuration (base URLs, MLE flags, JWKS)
-└── docs/                   # Documentation
-```
+A production-grade dual-language SDK (TypeScript + Python) with a unified Visa Direct orchestration framework, comprehensive DevX platform, and professional documentation hosted on Mintlify.
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+ and npm
-- Python 3.9+
-- Flask (for simulator)
+### **Unified Development (Recommended)**
+```bash
+# Install all dependencies
+npm run install:all
 
-### Setup
+# Start everything (simulator + DevX surface + docs)
+npm run dev:all
 
-1. **Start the simulator:**
-   ```bash
-   cd simulator
-   python3 -m pip install -r requirements.txt
-   python3 app.py
-   ```
+# Or start individual components
+npm run dev:simulator    # Flask simulator on :8766
+npm run dev:surface      # Next.js Dashboard on :3000
+npm run dev:docs         # Mintlify docs on :3001
+```
 
-2. **TypeScript SDK:**
-   ```bash
-   cd typescript-sdk
-   npm install
-   npm run build
-   export VISA_BASE_URL=http://127.0.0.1:8766
-   node dist/examples/fi_internal_to_card.js
-   ```
+### **Individual Component Setup**
 
-3. **Python SDK:**
-   ```bash
-   cd python-sdk
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -e .
-   export VISA_BASE_URL=http://127.0.0.1:8766
-   python examples/fi_internal_to_card.py
-   ```
+#### **1. Start Simulator**
+```bash
+cd simulator
+python app.py
+# Runs on http://127.0.0.1:8766
+```
+
+#### **2. Install & Run SDKs**
+
+**TypeScript SDK:**
+```bash
+cd typescript-sdk
+npm install
+npm run build
+export VISA_BASE_URL=http://127.0.0.1:8766
+node dist/examples/fi_internal_to_card.js
+```
+
+**Python SDK:**
+```bash
+cd python-sdk
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+export VISA_BASE_URL=http://127.0.0.1:8766
+python examples/fi_internal_to_card.py
+```
+
+#### **3. DevX Dashboard**
+```bash
+cd visa-direct-surface
+npm install
+npm run dev
+# Runs on http://localhost:3000
+```
+
+#### **4. Documentation**
+```bash
+cd mintlify-docs
+mintlify dev
+# Runs on http://localhost:3001
+```
+
+## 📁 Project Structure
+
+```
+visa-direct-sdk-cursor-pack-v2/
+├── 📁 typescript-sdk/           # TypeScript SDK
+│   ├── src/
+│   │   ├── core/orchestrator.ts
+│   │   ├── dx/builder.ts
+│   │   └── transport/secureHttpClient.ts
+│   └── package.json
+├── 📁 python-sdk/               # Python SDK
+│   ├── visa_direct_sdk/
+│   │   ├── core/orchestrator.py
+│   │   ├── dx/builder.py
+│   │   └── transport/secure_http_client.py
+│   └── pyproject.toml
+├── 📁 visa-direct-surface/      # DevX Dashboard (Next.js)
+│   ├── src/
+│   │   ├── app/                 # Dashboard pages
+│   │   └── components/          # UI Components
+│   └── package.json
+├── 📁 mintlify-docs/            # Documentation (Mintlify)
+│   ├── mint.json                # Mintlify configuration
+│   ├── introduction.mdx         # Main docs pages
+│   ├── reference/               # API reference
+│   └── guides/                  # Tutorial guides
+├── 📁 simulator/                # Local Flask Simulator
+│   ├── app.py
+│   └── requirements.txt
+├── 📁 endpoints/                # API Configuration
+│   └── endpoints.json
+├── 📁 policy/                   # Policy Engine
+└── 📄 package.json             # Root package.json (unified scripts)
+```
+
+## 🎯 Three-Part Platform
+
+### **1. DevX Dashboard (Next.js)**
+- **SDK Management** - Monitor TypeScript and Python SDKs
+- **API Key Management** - Production and sandbox key management
+- **Usage Analytics** - Request tracking and performance metrics
+- **Quick Actions** - Common tasks and shortcuts
+- **Professional UI** - Clean, fintech-forward interface
+
+### **2. Documentation (Mintlify)**
+- **Interactive Documentation** - Professional docs with live examples
+- **API Reference** - Complete TypeScript and Python API docs
+- **Code Examples** - Interactive code snippets and tutorials
+- **Search & Navigation** - Powerful search and organized navigation
+- **Hosted Solution** - Professional documentation hosting
+
+### **3. Production SDKs**
+- **TypeScript SDK** - Full type safety and modern JavaScript features
+- **Python SDK** - Identical API with comprehensive error handling
+- **Local Simulator** - Flask-based simulator for testing
+- **Security Features** - mTLS, MLE/JWE, idempotency, and guards
+
+## 🔧 Development Commands
+
+### **Unified Commands (Root Directory)**
+```bash
+npm run dev:all              # Start simulator + dashboard + docs
+npm run dev                  # Start simulator + dashboard
+npm run dev:docs             # Start Mintlify documentation
+npm run build                # Build all components
+npm run build:docs           # Build Mintlify documentation
+npm run test                 # Run all tests
+npm run install:all          # Install all dependencies
+npm run deploy:docs          # Deploy docs to Mintlify
+```
+
+### **Individual Component Commands**
+```bash
+# TypeScript SDK
+cd typescript-sdk
+npm run build                # Build TypeScript
+npm test                     # Run TypeScript tests
+
+# Python SDK
+cd python-sdk
+pip install -e .             # Install in development mode
+python -m pytest             # Run Python tests
+
+# DevX Dashboard
+cd visa-direct-surface
+npm run dev                  # Development server
+npm run build                # Production build
+
+# Documentation
+cd mintlify-docs
+mintlify dev                 # Development server
+mintlify build               # Build documentation
+mintlify deploy              # Deploy to Mintlify
+
+# Simulator
+cd simulator
+python app.py                # Start simulator
+```
 
 ## 🏗️ Architecture
 
-### Core Components
-
-1. **Orchestrator** (`core/orchestrator.{ts,py}`)
-   - Enforces guards: LedgerGuard, FundingGuard, ReceiptReused
-   - Routes by destination: Card → OCT, Account/Wallet → Payout APIs
-   - Manages idempotency and single-use receipts
-   - Emits compensation events on failures
-
-2. **DX Builder** (`dx/builder.{ts,py}`)
-   - Fluent API: `.forOriginator()`, `.withFundingInternal()`, `.toCardDirect()`
-   - Convenience methods: `.toCardViaAlias()`, `.withQuoteLock()`
-   - Delegates to orchestrator (no duplicate logic)
-   - Enforces FX policy (quote required for cross-border)
-
-3. **Secure Transport** (`transport/secureHttpClient.{ts,py}`)
-   - mTLS ready (cert/key/ca paths)
-   - MLE/JWE encryption when `requiresMLE=true`
-   - JWKS cache with 1x retry on `kid` mismatch
-   - Fail-closed in production mode
-
-4. **Preflight Services** (`services/recipientService.{ts,py}`)
-   - Alias resolution → PAV → FTAI chain
-   - TTL caching with background revalidation
-   - Account/Wallet validation
-
-### Non-Negotiable Rules
-
-- **DX Builder** only constructs `PayoutRequest` and calls `orchestrator.payout()`
-- **LedgerGuard**: FIs must confirm debit (`debitConfirmed: true`) with `confirmationRef`
-- **FundingGuard**: Single-use receipts for AFT/PIS (validated and consumed)
-- **Idempotency**: Saga-level, one key per payout execution
-- **MLE/JWE**: Only on endpoints flagged `requiresMLE` in config
-- **FX Policy**: Locked quotes required where configured
-
-## 🔧 Configuration
-
-### Endpoints Configuration (`endpoints/endpoints.json`)
-```json
-{
-  "baseUrls": {
-    "visa": "${VISA_BASE_URL:-https://api.visa.com}"
-  },
-  "routes": [
-    {
-      "path": "/visadirect/fundstransfer/v1/pushfunds",
-      "requiresMLE": false
-    }
-  ],
-  "jwks": {
-    "url": "${VISA_JWKS_URL:-https://api.visa.com/jwks}",
-    "cacheTtlSeconds": 300
-  }
-}
+### **Platform Architecture**
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Dashboard     │    │   Documentation   │    │   Production     │
+│   (Next.js)     │    │   (Mintlify)     │    │   SDKs          │
+│                 │    │                  │    │                 │
+│ • SDK Mgmt      │    │ • Interactive    │    │ • TypeScript    │
+│ • Usage Metrics │    │   Documentation  │    │ • Python        │
+│ • Quick Actions │    │ • API Reference  │    │ • Simulator     │
+│ • Key Mgmt      │    │ • Code Examples  │    │ • Security      │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 ▼
+                    ┌──────────────────┐
+                    │   Visa Direct     │
+                    │   API             │
+                    └──────────────────┘
 ```
 
-### Environment Variables
-- `VISA_BASE_URL`: API base URL (default: https://api.visa.com)
-- `VISA_JWKS_URL`: JWKS endpoint for MLE
-- `SDK_ENV`: `production` (fail-closed MLE) or `dev` (permissive)
-
-## 📋 Usage Examples
-
-### TypeScript
-```typescript
-import { PayoutBuilder } from './dist/dx/builder';
-
-const builder = PayoutBuilder.create();
-const result = await builder
-  .forOriginator('fi-001')
-  .withFundingInternal(true, 'conf-123')
-  .toCardDirect('tok_pan_411111******1111')
-  .forAmount('USD', 101)
-  .withIdempotencyKey('demo-1')
-  .execute();
+### **SDK Architecture**
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   DX Builder    │───▶│   Orchestrator    │───▶│ Secure Transport │
+│  (Fluent API)   │    │  (Core Logic)    │    │  (mTLS + MLE)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Preflight      │    │     Guards        │    │   Visa Direct   │
+│  Services       │    │  (Ledger/Funding) │    │      API        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-### Python
-```python
-from visa_direct_sdk.dx.builder import PayoutBuilder
+## 🔐 Security Features
 
-builder = PayoutBuilder.create()
-result = builder \
-  .for_originator('fi-001') \
-  .with_funding_internal(True, 'conf-123') \
-  .to_card_direct('tok_pan_411111******1111') \
-  .for_amount('USD', 101) \
-  .with_idempotency_key('demo-1') \
-  .execute()
-```
+- **mTLS Authentication** - Client certificate validation
+- **MLE/JWE Encryption** - End-to-end encryption for sensitive data
+- **JWKS Key Rotation** - Automatic key rotation with retry logic
+- **Idempotency Protection** - Saga-level deduplication
+- **Single-use Receipts** - Prevents receipt reuse across processes
+- **Fail-closed Behavior** - Production-mode security enforcement
 
-### Advanced Features
-```typescript
-// Alias resolution + FX quote lock
-const result = await builder
-  .forOriginator('fi-001')
-  .withFundingInternal(true, 'conf-123')
-  .toCardViaAlias({ alias: 'dev@example.com', aliasType: 'EMAIL' })
-  .withQuoteLock({ srcCurrency: 'USD', dstCurrency: 'EUR' })
-  .forAmount('EUR', 100)
-  .execute();
-```
+## 📊 Production Readiness
 
-## 🧪 Testing
+- ✅ **Comprehensive Testing** - Unit, integration, and contract tests
+- ✅ **Error Handling** - Typed exceptions with compensation events
+- ✅ **Telemetry & Logging** - Structured logging with OpenTelemetry
+- ✅ **Pluggable Storage** - Redis adapters with in-memory fallbacks
+- ✅ **Policy Engine** - Externalized configuration management
+- ✅ **Professional Documentation** - Mintlify-hosted interactive docs
 
-### Test Suites
-- **KV Stores**: Idempotency and receipt reuse across orchestrator instances
-- **MLE Telemetry**: Fail-closed behavior and JWKS retry logic
-- **Preflight Cache**: Background revalidation after half-TTL
-- **Compensation Events**: Schema validation and emission
-- **FX Policy**: Quote required/expired enforcement
+## 🚀 Deployment
 
-### Running Tests
+### **Development**
 ```bash
-# TypeScript
-cd typescript-sdk
-npm run build
-node dist/tests/kv_stores.test.js
-node dist/tests/mle_telemetry.test.js
-
-# Python
-cd python-sdk
-python -m pytest tests/  # When pytest is added
+npm run dev:all              # Start all services locally
 ```
 
-## 🔒 Security
-
-### MLE/JWE
-- Conditional encryption based on `requiresMLE` flag
-- JWKS cache with TTL and 1x retry on `kid` mismatch
-- Production mode: fail-closed when JWKS unavailable
-- Dev mode: no-op passthrough for simulator
-
-### mTLS
-- Client certificates supported via constructor
-- Certificate, key, and CA paths configurable
-- Automatic HTTPS agent setup
-
-### PII Protection
-- Never log PAN or plaintext JWE payloads
-- Use tokens (`panToken`) for card details
-- Redacted compensation event logging
-
-## 🏪 Pluggable Stores
-
-### Interfaces
-- **IdempotencyStore**: `get(idempotencyKey)`, `put(idempotencyKey, value, ttl)`
-- **ReceiptStore**: `consumeOnce(namespace, receiptId)`
-- **Cache**: `get(key)`, `set(key, value, ttl)`, `getWithRevalidate(key)`
-
-### Implementations
-- **InMemory**: Default implementations for development
-- **Redis**: Stub adapters provided (pseudocode for production)
-
-### Usage
-```typescript
-import { RedisIdempotencyStore, RedisReceiptStore } from './storage/';
-
-const orchestrator = new Orchestrator(
-  httpClient,
-  new RedisIdempotencyStore(redisClient),
-  new RedisReceiptStore(redisClient)
-);
+### **Production**
+```bash
+npm run build                # Build all components
+npm run deploy:docs          # Deploy docs to Mintlify
 ```
 
-## 📊 Monitoring & Observability
+## 📚 Documentation
 
-### Telemetry Events
-- `jwe.encrypt.started/success/failure`
-- `jwks.fetch.started/success/failure`
-- `jwks.refresh.on_kid_miss`
-- `jwe.decrypt.retry_on_kid_miss`
+- **[Dashboard](./visa-direct-surface/README.md)** - DevX dashboard and management
+- **[SDK Documentation](./typescript-sdk/README.md)** - Complete TypeScript API reference
+- **[Python Documentation](./python-sdk/README.md)** - Complete Python API reference
+- **[Simulator Guide](./simulator/README.md)** - Local testing and development
+- **[Mintlify Docs](./mintlify-docs/)** - Professional documentation
+- **[Handover Guide](./HANDOVER.md)** - Project handover and team collaboration
+- **[Commands Reference](./COMMANDS.md)** - Quick command reference
 
-### Compensation Events
-```json
-{
-  "event": "payout_failed_requires_compensation",
-  "sagaId": "payout-123",
-  "funding": { "type": "AFT", "receiptId": "r1" },
-  "reason": "NetworkError",
-  "metadata": { "message": "Connection timeout" },
-  "timestamp": "2025-10-07T15:06:35.393Z"
-}
-```
+## 🌐 Live URLs
 
-## 🚧 Phase 2 Status
-
-### ✅ Completed
-- Core orchestrator with guards and routing
-- DX fluent builder (TS & Py)
-- Secure transport with MLE/JWE hooks
-- Preflight services with TTL caching
-- Pluggable stores (idempotency, receipts, cache)
-- Compensation event emission
-- FX policy enforcement
-- Comprehensive test coverage
-- Production hardening (fail-closed, telemetry, schema validation)
-
-### 🔄 Next Phase (Phase 3)
-- Corridor policy engine (JSON/YAML configuration)
-- Real KV adapters (Redis/DynamoDB)
-- OpenTelemetry integration
-- Comprehensive documentation
-- CI/CD pipeline with contract tests
+- **Dashboard**: `https://visa-direct-surface.vercel.app/dashboard`
+- **Documentation**: `https://visa-direct-sdk.mintlify.app`
+- **GitHub**: `https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python`
 
 ## 🤝 Contributing
 
-### Development Workflow
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Make changes following existing patterns
-4. Add tests for new functionality
-5. Run test suite: `npm run build && node dist/tests/*.test.js`
-6. Commit: `git commit -m 'Add amazing feature'`
-7. Push: `git push origin feature/amazing-feature`
-8. Open Pull Request
-
-### Code Standards
-- TypeScript: Strict mode, explicit types
-- Python: Type hints, PEP 8 compliance
-- Tests: Cover happy path and error cases
-- Documentation: Update README for new features
-
-## 📞 Support
-
-For questions or issues:
-1. Check existing issues in the repository
-2. Create new issue with detailed description
-3. Include logs, configuration, and steps to reproduce
-4. Tag relevant team members
+1. **Fork the repository**
+2. **Create a feature branch** - `git checkout -b feature/amazing-feature`
+3. **Make your changes** - Follow the established patterns
+4. **Run tests** - `npm run test`
+5. **Commit changes** - `git commit -m 'Add amazing feature'`
+6. **Push to branch** - `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
 
 ## 📄 License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation** - Check the comprehensive Mintlify docs
+- **Dashboard** - Use the DevX dashboard for management
+- **Issues** - Report bugs and feature requests via GitHub Issues
+- **Discussions** - Join community discussions for questions and ideas
 
 ---
 
-**Last Updated**: October 2025  
-**Version**: Phase 2 Complete  
-**Status**: Production Ready
+**Built with ❤️ for the Visa Direct developer community**

@@ -7,18 +7,18 @@ The Visa Direct SDK & Orchestrator project has successfully completed Phase 2 wi
 ## What's Been Delivered
 
 ### Core Architecture
-- **Orchestrator**: Enforces business rules (LedgerGuard, FundingGuard, ReceiptReused) and routes payouts
-- **DX Builder**: Fluent API that delegates to orchestrator (no duplicate logic)
-- **Secure Transport**: mTLS + MLE/JWE with JWKS cache and fail-closed production mode
-- **Preflight Services**: Alias → PAV → FTAI chain with TTL caching and background revalidation
-- **Pluggable Stores**: Idempotency, receipts, and cache with Redis adapter stubs
+- **Orchestrator**: Enforces business rules (LedgerGuard, FundingGuard, ReceiptReused), runs full preflight, and routes payouts
+- **DX Builder**: Fluent API that captures intent and defers all network execution to the orchestrator
+- **Secure Transport**: mTLS + MLE/JWE with JWKS cache, retry, and fail-closed production mode (dev passthrough supported)
+- **Preflight Services**: Alias → PAV → FTAI chain with cache TTL + background revalidation
+- **Pluggable Stores**: Idempotency, receipts, and cache with working Redis adapters plus in-memory defaults
 
 ### Production Features
-- **Idempotency**: Saga-level with pluggable stores (in-memory + Redis stubs)
-- **Single-use Receipts**: Prevents AFT/PIS receipt reuse across processes
-- **Compensation Events**: Emitted on post-funding failures with schema validation
-- **FX Policy**: Quote required/expired enforcement for cross-border payouts
-- **Telemetry**: Structured logging for MLE/JWE operations and JWKS management
+- **Idempotency**: Saga-level with pluggable stores (in-memory + Redis)
+- **Single-use Receipts**: Prevents AFT/PIS receipt reuse across processes (in-memory + Redis)
+- **Compensation Events**: Emitted on post-funding failures with schema validation/redaction
+- **FX Policy**: Quote required/expired enforcement for cross-border payouts inside orchestrator
+- **Telemetry**: Structured logging hooks for MLE/JWE operations and JWKS management
 
 ### Testing & Quality
 - **Comprehensive Tests**: KV stores, MLE telemetry, preflight cache, compensation events
@@ -100,7 +100,7 @@ python examples/fi_internal_to_card.py
 ### 2. Pluggable Storage
 - **Decision**: Abstract interfaces for idempotency, receipts, and cache
 - **Rationale**: Enables production scaling without code changes
-- **Impact**: In-memory defaults for dev, Redis stubs for production
+- **Impact**: In-memory defaults for dev, Redis adapters for production
 
 ### 3. Conditional MLE/JWE
 - **Decision**: Encryption only when `requiresMLE=true` in config
@@ -110,7 +110,7 @@ python examples/fi_internal_to_card.py
 ### 4. FX Policy Enforcement
 - **Decision**: Quote required for cross-border payouts (non-USD)
 - **Rationale**: Prevents FX exposure and ensures locked rates
-- **Impact**: Builder validates quotes before orchestrator execution
+- **Impact**: Orchestrator locks quotes during preflight and rejects stale quotes
 
 ## Non-Negotiable Rules
 
@@ -137,7 +137,7 @@ python examples/fi_internal_to_card.py
 
 ### 🔄 Next Phase (Phase 3)
 - [ ] Corridor policy engine (JSON/YAML configuration)
-- [ ] Real KV adapters (Redis/DynamoDB with connection pooling)
+- [ ] DynamoDB adapters + integration tests
 - [ ] OpenTelemetry integration
 - [ ] Comprehensive CI/CD pipeline
 - [ ] Contract tests against simulator

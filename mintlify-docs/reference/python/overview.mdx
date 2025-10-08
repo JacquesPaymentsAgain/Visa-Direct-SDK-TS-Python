@@ -1,0 +1,103 @@
+---
+title: 'Python SDK Overview'
+description: 'Complete Python SDK reference'
+---
+
+## Overview
+
+The Python package mirrors the TypeScript SDK and exposes the same orchestration primitives (`SecureHttpClient`, `PayoutBuilder`, and `Orchestrator`).
+
+## Installation
+
+```bash
+pip install visa-direct-sdk
+```
+
+## Quick Start
+
+```python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+http = SecureHttpClient(
+    base_url='https://sandbox.api.visa.com',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/visa-ca.pem'
+)
+
+receipt = PayoutBuilder.create(http) \
+    .for_originator('fi-001') \
+    .with_funding_internal(True, 'LEDGER123') \
+    .to_card_direct('tok_pan_411111******1111') \
+    .for_amount('GBP', 5000) \
+    .with_idempotency_key('py-reference-example') \
+    .execute()
+```
+
+## Core Components
+
+<CardGroup cols={2}>
+  <Card title="PayoutBuilder" icon="code" href="/reference/python/builder">
+    Fluent API for constructing payouts
+  </Card>
+  <Card title="Orchestrator" icon="zap" href="/reference/python/orchestrator">
+    Guard and execution engine
+  </Card>
+  <Card title="SecureHttpClient" icon="shield" href="/reference/python/transport">
+    mTLS + MLE transport
+  </Card>
+  <Card title="Storage Interfaces" icon="database" href="/installation#storage-configuration">
+    Use Redis or Dynamo adapters
+  </Card>
+  <Card title="Policy Engine" icon="globe" href="/reference/typescript/policy">
+    Shared corridor rules (TypeScript + Python)
+  </Card>
+  <Card title="Telemetry" icon="activity" href="/reference/typescript/telemetry">
+    Shared OpenTelemetry helpers
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+```python
+from visa_direct_sdk.errors import LedgerNotConfirmed, ReceiptReused
+
+try:
+    builder.execute()
+except LedgerNotConfirmed:
+    # handle missing ledger confirmation
+    ...
+except ReceiptReused:
+    # handle duplicate funding receipt
+    ...
+```
+
+## Storage Configuration
+
+```python
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.storage.idempotency_store import RedisIdempotencyStore
+from visa_direct_sdk.storage.receipt_store import RedisReceiptStore
+
+redis_client = ...  # e.g. redis.Redis()
+orchestrator = Orchestrator(
+    http,
+    idempotency_store=RedisIdempotencyStore(redis_client),
+    receipt_store=RedisReceiptStore(redis_client)
+)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Builder API" icon="code" href="/reference/python/builder">
+    Explore builder methods
+  </Card>
+  <Card title="Orchestrator API" icon="zap" href="/reference/python/orchestrator">
+    Understand guard rails
+  </Card>
+  <Card title="Transport Layer" icon="shield" href="/reference/python/transport">
+    Configure SecureHttpClient
+  </Card>
+</CardGroup>

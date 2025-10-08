@@ -5,41 +5,41 @@
   "routes": [
     {
       "path": "/visadirect/fundstransfer/v1/pullfunds",
-      "requiresMLE": false
+      "requiresMLE": true
     },
     {
       "path": "/visadirect/fundstransfer/v1/pushfunds",
-      "requiresMLE": false
+      "requiresMLE": true
     },
     {
       "path": "/accountpayouts/v1/payout",
-      "requiresMLE": false
+      "requiresMLE": true
     },
     {
       "path": "/walletpayouts/v1/payout",
-      "requiresMLE": false
+      "requiresMLE": true
     },
     {
       "path": "/visapayouts/v3/payouts/:id",
-      "requiresMLE": false
-    }
-    ,{
+      "requiresMLE": true
+    },
+    {
       "path": "/visaaliasdirectory/v1/resolve",
       "requiresMLE": false
-    }
-    ,{
+    },
+    {
       "path": "/pav/v1/card/validation",
       "requiresMLE": false
-    }
-    ,{
+    },
+    {
       "path": "/paai/v1/fundstransfer/attributes/inquiry",
       "requiresMLE": false
-    }
-    ,{
+    },
+    {
       "path": "/visapayouts/v3/payouts/validate",
       "requiresMLE": false
-    }
-    ,{
+    },
+    {
       "path": "/forexrates/v1/lock",
       "requiresMLE": false
     }

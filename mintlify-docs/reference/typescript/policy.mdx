@@ -1,0 +1,51 @@
+---
+title: 'Corridor Policy'
+description: 'Configure corridor rules and enforcement in the TypeScript SDK'
+---
+
+## Overview
+
+The SDK ships with an embedded corridor policy covering common demo corridors. Use the policy helpers to inspect or override rules before executing payouts.
+
+## Loading Policy
+
+```typescript
+import { loadPolicy, getRules } from 'visa-direct-sdk';
+
+// Use embedded defaults
+const policy = loadPolicy();
+
+// Optionally load a JSON file bundled with your app
+const customPolicy = loadPolicy({ file: './policy/corridor-policy.json' });
+
+const rules = getRules(policy, {
+  sourceCountry: 'GB',
+  targetCountry: 'IN',
+  sourceCurrency: 'GBP',
+  targetCurrency: 'INR'
+});
+```
+
+## Applying Rules in Builder
+
+```typescript
+const builder = PayoutBuilder.create(http);
+
+const receipt = await builder
+  .forCorridor('GB', 'IN', { sourceCurrency: 'GBP', targetCurrency: 'INR' })
+  .withQuoteLock({ srcCurrency: 'GBP', dstCurrency: 'INR' })
+  .toCardViaAlias({ alias: '+447911123456', aliasType: 'MOBILE' })
+  .forAmount('INR', 410000)
+  .withIdempotencyKey('corridor-demo')
+  .execute();
+```
+
+## Custom Enforcement
+
+Use the returned `rules` to enforce additional logic (e.g., maximum amount, allowed rails) before calling `.execute()`.
+
+```typescript
+if (rules.limits?.maxValueMinor && payoutAmount > rules.limits.maxValueMinor) {
+  throw new Error('Amount exceeds corridor limit');
+}
+```

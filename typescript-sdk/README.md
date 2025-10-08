@@ -38,12 +38,12 @@ const result = await PayoutBuilder.create()
 - `withIdempotencyKey(key: string)` - Set idempotency key
 
 #### Advanced Methods
-- `toCardViaAlias({ alias, aliasType })` - Resolve alias to panToken
-- `withQuoteLock({ srcCurrency, dstCurrency, amountMinor? })` - Lock FX quote
-- `withCompliance(payload)` - Add compliance screening
+- `toCardViaAlias({ alias, aliasType })` - Collect alias routing info for orchestrator preflight
+- `withQuoteLock({ srcCurrency, dstCurrency, amountMinor? })` - Request FX lock during preflight
+- `withCompliance(payload)` - Attach compliance payload for screening
 
 #### Execution
-- `execute()` - Execute the payout (enforces FX policy)
+- `execute()` - Builds `PayoutRequest` and delegates to orchestrator (which enforces FX policy, compliance, and preflight)
 
 ### Orchestrator
 
@@ -61,9 +61,9 @@ const result = await PayoutBuilder.create()
 
 #### MLE/JWE Support
 - Conditional encryption based on `requiresMLE(path)` from config
-- JWKS cache with TTL and 1x retry on `kid` mismatch
+- JWKS cache with TTL, retry on `kid` mismatch, and environment-aware fallbacks
 - Production mode: fail-closed when JWKS unavailable
-- Dev mode: no-op passthrough for simulator
+- Dev mode: JSON passthrough when JWKS is absent (simulator-friendly)
 
 #### mTLS Support
 ```typescript
@@ -77,28 +77,28 @@ const client = new SecureHttpClient({
 ### Preflight Services
 
 #### RecipientService
-- `resolveAlias(alias, aliasType)` - Resolve alias to credentials
-- `pav(panToken)` - Card validation
-- `ftai(panToken)` - Fund transfer attributes inquiry
-- `validate(destinationHash, payload)` - Account/wallet validation
+- `resolveAlias(alias, aliasType)` - Resolve alias to credentials with background cache revalidation
+- `pav(panToken)` - Card validation with cache revalidation
+- `ftai(panToken)` - Fund transfer attributes inquiry with cache revalidation
+- `validate(destinationHash, payload)` - Account/wallet validation with cache revalidation
 
 #### QuotingService
-- `lock(srcCurrency, dstCurrency, amountMinor)` - Lock FX quote
+- `lock(srcCurrency, dstCurrency, amountMinor)` - Lock FX quote with cached background refresh
 
 ### Storage Interfaces
 
 #### IdempotencyStore
 ```typescript
 interface IdempotencyStore<T> {
-  get(idempotencyKey: string): T | undefined;
-  put(idempotencyKey: string, value: T, ttlSeconds: number): void;
+  get(idempotencyKey: string): Promise<T | undefined>;
+  put(idempotencyKey: string, value: T, ttlSeconds: number): Promise<void>;
 }
 ```
 
 #### ReceiptStore
 ```typescript
 interface ReceiptStore {
-  consumeOnce(namespace: 'AFT' | 'PIS', receiptId: string): boolean;
+  consumeOnce(namespace: 'AFT' | 'PIS', receiptId: string): Promise<boolean>;
 }
 ```
 
@@ -153,7 +153,7 @@ The SDK reads from `endpoints/endpoints.json`:
   "routes": [
     {
       "path": "/visadirect/fundstransfer/v1/pushfunds",
-      "requiresMLE": false
+      "requiresMLE": true
     }
   ],
   "jwks": {

@@ -1,0 +1,63 @@
+---
+title: 'Orchestrator (Python)'
+description: 'Execution engine for the Python SDK'
+---
+
+## Overview
+
+`visa_direct_sdk.core.orchestrator.Orchestrator` enforces ledger/funding guards, runs the preflight pipeline, and dispatches payouts using the shared transport.
+
+## Construction
+
+```python
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+
+http = SecureHttpClient(...)
+orchestrator = Orchestrator(http)
+```
+
+### Optional Dependencies
+
+```python
+from visa_direct_sdk.storage.idempotency_store import RedisIdempotencyStore
+from visa_direct_sdk.storage.receipt_store import DynamoReceiptStore
+
+orchestrator = Orchestrator(
+    http,
+    idempotency_store=RedisIdempotencyStore(redis_client),
+    receipt_store=DynamoReceiptStore('visa-direct-receipts', dynamo_client)
+)
+```
+
+## API
+
+<ParamField path="Orchestrator" type="object">
+  <Param path="payout(request_dict)" type="dict">
+    Executes a payout request assembled by the builder.
+  </Param>
+  <Param path="idempotency_store" type="IdempotencyStore">
+    Saga-level idempotency persistence.
+  </Param>
+  <Param path="receipt_store" type="ReceiptStore">
+    Single-use receipt enforcement for AFT/PIS.
+  </Param>
+  <Param path="events" type="CompensationEventEmitter">
+    Handle compensation events (default `LogEmitter`).
+  </Param>
+</ParamField>
+
+## Errors
+
+```python
+from visa_direct_sdk.errors import (
+    LedgerNotConfirmed,
+    AFTDeclined,
+    PISFailed,
+    ReceiptReused,
+    QuoteRequiredError,
+    QuoteExpiredError
+)
+```
+
+Catch these when calling the builder or orchestrator to handle guard failures gracefully.

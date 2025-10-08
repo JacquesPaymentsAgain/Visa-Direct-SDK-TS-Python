@@ -1,0 +1,78 @@
+---
+title: 'PayoutBuilder (TypeScript)'
+description: 'Fluent payout builder for the TypeScript SDK'
+---
+
+## Overview
+
+`PayoutBuilder.create(httpClient)` returns a fluent builder mirroring the Python API.
+
+## Creating a Builder
+
+```typescript
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({ baseUrl: 'http://127.0.0.1:8766' });
+const builder = PayoutBuilder.create(http);
+```
+
+## Core Methods
+
+<ParamField path="PayoutBuilder" type="object">
+  <Param path="forOriginator(originatorId)" type="string">
+    Set the originator identifier.
+  </Param>
+  <Param path="withFundingInternal(debitConfirmed, confirmationRef)" type="boolean, string">
+    Internal ledger funding guard.
+  </Param>
+  <Param path="withFundingFromCard(receiptId, status)" type="string, 'approved'|'declined'">
+    AFT funding single-use.
+  </Param>
+  <Param path="withFundingFromExternal(paymentId, status)" type="string, 'executed'|'failed'">
+    PIS funding entry.
+  </Param>
+  <Param path="toCardDirect(panToken)" type="string">
+    Direct OCT payout.
+  </Param>
+  <Param path="toCardViaAlias({ alias, aliasType })" type="object">
+    Alias → PAV → FTAI chain.
+  </Param>
+  <Param path="toAccount(accountId)" type="string">
+    Account payout endpoint.
+  </Param>
+  <Param path="toWallet(walletId)" type="string">
+    Wallet payout endpoint.
+  </Param>
+  <Param path="forAmount(currency, minor)" type="string, number">
+    Amount object.
+  </Param>
+  <Param path="withQuoteLock({ srcCurrency, dstCurrency, amountMinor? })" type="object">
+    Request FX lock.
+  </Param>
+  <Param path="forCorridor(sourceCountry, targetCountry, currencies?)" type="object">
+    Attach corridor metadata for policy enforcement.
+  </Param>
+  <Param path="withIdempotencyKey(key)" type="string">
+    Provide explicit idempotency key.
+  </Param>
+  <Param path="withCompliance(payload)" type="any">
+    Attach compliance payload.
+  </Param>
+  <Param path="execute()" type="Promise<any>">
+    Run the payout through the orchestrator.
+  </Param>
+</ParamField>
+
+## Example
+
+```typescript
+const receipt = await PayoutBuilder.create(http)
+  .forOriginator('fi-001')
+  .withFundingInternal(true, 'LEDGER123')
+  .toCardViaAlias({ alias: '+447911123456', aliasType: 'MOBILE' })
+  .withQuoteLock({ srcCurrency: 'GBP', dstCurrency: 'INR' })
+  .forCorridor('GB', 'IN', { sourceCurrency: 'GBP', targetCurrency: 'INR' })
+  .forAmount('INR', 410000)
+  .withIdempotencyKey('ts-corridor-demo')
+  .execute();
+```

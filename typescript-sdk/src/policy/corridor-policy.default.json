@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "corridors": [
+    {
+      "sourceCountry": "GB",
+      "targetCountry": "IN",
+      "currencies": { "source": "GBP", "target": "INR" },
+      "rules": {
+        "fx": { "lockRequired": true },
+        "rails": { "allowedDestinations": ["card", "account"] },
+        "limits": { "maxValueMinor": 5000000 }
+      }
+    },
+    {
+      "sourceCountry": "GB",
+      "targetCountry": "EU",
+      "currencies": { "source": "GBP", "target": "EUR" },
+      "rules": {
+        "fx": { "lockRequired": false },
+        "rails": { "allowedDestinations": ["card", "account", "wallet"] }
+      }
+    },
+    {
+      "sourceCountry": "US",
+      "targetCountry": "MX",
+      "currencies": { "source": "USD", "target": "MXN" },
+      "rules": {
+        "fx": { "lockRequired": true },
+        "rails": { "allowedDestinations": ["card"] }
+      }
+    }
+  ]
+}

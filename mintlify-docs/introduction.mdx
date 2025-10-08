@@ -1,0 +1,118 @@
+---
+title: Introduction
+description: 'Welcome to the Visa Direct SDK documentation'
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Hero Dark"
+/>
+
+## What is Visa Direct SDK?
+
+The Visa Direct SDK is a production-grade dual-language SDK (TypeScript + Python) with a unified Visa Direct orchestration framework, comprehensive DevX platform, and local simulator for rapid development.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Unified SDKs" icon="code">
+    TypeScript and Python SDKs with identical APIs, built for production scale
+  </Card>
+  <Card title="Security by Default" icon="shield">
+    mTLS + MLE/JWE encryption, idempotency, and single-use receipt protection
+  </Card>
+  <Card title="Preflight Pipeline" icon="zap">
+    Alias → PAV → FTAI with caching, FX quotes, and policy guardrails
+  </Card>
+  <Card title="Policy & Observability" icon="activity">
+    Corridor policy engine, Dynamo persistence, and OpenTelemetry tracing
+  </Card>
+</CardGroup>
+
+## Architecture
+
+The SDK follows a clean architecture pattern with three main layers:
+
+<Steps>
+  <Step title="DX Builder">
+    Fluent API for building payout requests with preflight, quoting, and compliance
+  </Step>
+  <Step title="Core Orchestrator">
+    Authoritative engine enforcing guards and executing payouts with saga-level idempotency
+  </Step>
+  <Step title="Secure Transport">
+    mTLS and MLE/JWE transport layer for secure API communication
+  </Step>
+</Steps>
+
+## Quick Start
+
+Get started with your first payout in minutes:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { PayoutBuilder, SecureHttpClient } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({
+  baseUrl: 'http://127.0.0.1:8766',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/ca.pem'
+});
+
+const builder = PayoutBuilder.create(http);
+const receipt = await builder
+  .forOriginator('fi-001')
+  .withFundingInternal(true, 'LEDGER123')
+  .toCardViaAlias({ alias: '+447911123456', aliasType: 'MOBILE' })
+  .forAmount('GBP', 5000)
+  .withIdempotencyKey('demo-1')
+  .execute();
+```
+
+```python Python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+http = SecureHttpClient(
+    base_url='http://127.0.0.1:8766',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/ca.pem'
+)
+
+builder = PayoutBuilder.create(http)
+receipt = builder \
+    .for_originator('fi-001') \
+    .with_funding_internal(True, 'LEDGER123') \
+    .to_card_via_alias('+447911123456', 'MOBILE') \
+    .for_amount('GBP', 5000) \
+    .with_idempotency_key('demo-1') \
+    .execute()
+```
+
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Follow our step-by-step quickstart guide
+  </Card>
+  <Card title="API Reference" icon="book" href="/reference/typescript/overview">
+    Explore the complete API documentation
+  </Card>
+  <Card title="Dashboard" icon="chart-bar" href="https://visa-direct-surface.vercel.app/dashboard">
+    Open the developer dashboard
+  </Card>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python">
+    View source code and contribute
+  </Card>
+</CardGroup>

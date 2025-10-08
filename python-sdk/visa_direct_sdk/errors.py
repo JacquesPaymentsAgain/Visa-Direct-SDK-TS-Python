@@ -12,3 +12,7 @@ class QuoteRequiredError(Exception):
 
 class QuoteExpiredError(Exception):
 	pass
+
+
+class DestinationNotAllowedError(Exception):
+	pass

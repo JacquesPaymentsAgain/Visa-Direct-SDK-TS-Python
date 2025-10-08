@@ -1,0 +1,313 @@
+---
+title: 'Installation'
+description: 'Install and configure Visa Direct SDK'
+---
+
+## Installation
+
+Install the Visa Direct SDK for your preferred language:
+
+<CodeGroup>
+
+```bash TypeScript
+npm install visa-direct-sdk
+```
+
+```bash Python
+pip install visa-direct-sdk
+```
+
+</CodeGroup>
+
+## Configuration
+
+### Client Configuration
+
+<CodeGroup>
+
+```typescript TypeScript
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({
+  baseUrl: process.env.VISA_BASE_URL ?? 'https://sandbox.api.visa.com',
+  certPath: process.env.VISA_CERT_PATH,
+  keyPath: process.env.VISA_KEY_PATH,
+  caPath: process.env.VISA_CA_PATH,
+  endpointsFile: process.env.VISA_ENDPOINTS_FILE // optional overrides
+});
+
+const orchestrator = new Orchestrator(http);
+const builder = PayoutBuilder.create(http);
+
+// Add Visa API signature headers using your own Axios interceptor if needed
+```
+
+```python Python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+http = SecureHttpClient(
+    base_url=os.getenv('VISA_BASE_URL', 'https://sandbox.api.visa.com'),
+    cert_path=os.getenv('VISA_CERT_PATH'),
+    key_path=os.getenv('VISA_KEY_PATH'),
+    ca_path=os.getenv('VISA_CA_PATH'),
+    endpoints_file=os.getenv('VISA_ENDPOINTS_FILE')
+)
+
+orchestrator = Orchestrator(http)
+builder = PayoutBuilder.create(http)
+
+# Use requests/adapters middleware to add Visa signature headers as required
+```
+
+</CodeGroup>
+
+## Credentials & mTLS Certificates
+
+### Generating Certificates
+
+For development, you can generate self-signed certificates:
+
+```bash
+# Generate private key
+openssl genrsa -out client.key 2048
+
+# Generate certificate signing request
+openssl req -new -key client.key -out client.csr
+
+# Generate self-signed certificate
+openssl x509 -req -days 365 -in client.csr -signkey client.key -out client.pem
+```
+
+### Production Certificates
+
+For production, obtain certificates from Visa Direct:
+
+1. **Request certificates** through the Visa Direct portal
+2. **Install certificates** in a secure location
+3. **Configure paths** in your client configuration
+4. **Rotate certificates** according to Visa Direct policies
+
+## Storage Configuration
+
+### In-Memory Storage (Default)
+
+The SDK uses in-memory storage by default for development:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { Orchestrator } from 'visa-direct-sdk';
+
+const orchestrator = new Orchestrator(http); // uses in-memory stores by default
+```
+
+```python Python
+from visa_direct_sdk.core.orchestrator import Orchestrator
+
+orchestrator = Orchestrator(http)  # in-memory stores by default
+```
+
+</CodeGroup>
+
+### Redis Storage (Production)
+
+For production, use Redis for persistent storage:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { RedisIdempotencyStore, RedisReceiptStore, Orchestrator } from 'visa-direct-sdk';
+
+const orchestrator = new Orchestrator(http, {
+  idempotencyStore: new RedisIdempotencyStore(redisClient),
+  receiptStore: new RedisReceiptStore(redisClient)
+});
+```
+
+```python Python
+from redis import Redis
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.storage.idempotency_store import RedisIdempotencyStore
+from visa_direct_sdk.storage.receipt_store import RedisReceiptStore
+
+redis = Redis(host='localhost', port=6379, password='your-redis-password')
+orchestrator = Orchestrator(
+    http,
+    idempotency_store=RedisIdempotencyStore(redis),
+    receipt_store=RedisReceiptStore(redis)
+)
+```
+
+</CodeGroup>
+
+### DynamoDB Storage
+
+To showcase cloud-ready durability, wire the Dynamo adapters:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoIdempotencyStore, DynamoReceiptStore, Orchestrator } from 'visa-direct-sdk';
+
+const dynamo = new DynamoDBClient({ region: 'us-east-1' });
+const orchestrator = new Orchestrator(http, {
+  idempotencyStore: new DynamoIdempotencyStore('visa-direct-idempotency', dynamo),
+  receiptStore: new DynamoReceiptStore('visa-direct-receipts', dynamo)
+});
+```
+
+```python Python
+import boto3
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.storage.idempotency_store import DynamoIdempotencyStore
+from visa_direct_sdk.storage.receipt_store import DynamoReceiptStore
+
+dynamo = boto3.client('dynamodb', region_name='us-east-1')
+orchestrator = Orchestrator(
+    http,
+    idempotency_store=DynamoIdempotencyStore('visa-direct-idempotency', dynamo),
+    receipt_store=DynamoReceiptStore('visa-direct-receipts', dynamo)
+)
+```
+
+</CodeGroup>
+
+## Error Handling
+
+Configure error handling and logging:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { Orchestrator, LogEmitter } from 'visa-direct-sdk';
+
+const orchestrator = new Orchestrator(http, {
+  events: new LogEmitter()
+});
+```
+
+```python Python
+from visa_direct_sdk.core.orchestrator import Orchestrator
+from visa_direct_sdk.utils.events import LogEmitter
+
+orchestrator = Orchestrator(http, events=LogEmitter())
+```
+
+</CodeGroup>
+
+## Telemetry (Optional)
+
+The SDK includes OpenTelemetry helpers for tracing demo flows:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { initOtel, withSpan } from 'visa-direct-sdk';
+
+initOtel();
+await withSpan('demo.payout', async () => {
+  await builder
+    .withIdempotencyKey('otel-demo')
+    .execute();
+});
+```
+
+```python Python
+from visa_direct_sdk.utils.otel import init_otel, use_span
+
+init_otel()
+with use_span('demo.payout'):
+    builder.with_idempotency_key('otel-demo').execute()
+```
+
+</CodeGroup>
+
+## Corridor Policy
+
+By default the SDK ships with built-in corridor rules. To customize behaviour:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { loadPolicy, getRules } from 'visa-direct-sdk';
+
+const policy = loadPolicy({ file: './policy/corridor-policy.json' });
+const rules = getRules(policy, {
+  sourceCountry: 'GB',
+  targetCountry: 'IN',
+  sourceCurrency: 'GBP',
+  targetCurrency: 'INR'
+});
+
+// inject corridor info before execute
+const receipt = await builder
+  .forCorridor('GB', 'IN', { sourceCurrency: 'GBP', targetCurrency: 'INR' })
+  .withQuoteLock({ srcCurrency: 'GBP', dstCurrency: 'INR' })
+  .execute();
+```
+
+```python Python
+from visa_direct_sdk.policy.corridor_policy import load_policy, get_rules
+
+policy = load_policy()  # uses embedded defaults
+rules = get_rules(
+    policy,
+    source_country='GB',
+    target_country='IN',
+    source_currency='GBP',
+    target_currency='INR'
+)
+
+receipt = builder \
+    .for_corridor('GB', 'IN', source_currency='GBP', target_currency='INR') \
+    .with_quote_lock('GBP', 'INR') \
+    .execute()
+```
+
+</CodeGroup>
+
+## Testing Configuration
+
+For testing, use the local simulator:
+
+<CodeGroup>
+
+```typescript TypeScript
+const testClient = new PayoutBuilder({
+  baseUrl: 'http://127.0.0.1:8766',
+  apiKey: 'test-api-key',
+  certPath: './test-certs/client.pem',
+  keyPath: './test-certs/client.key'
+});
+```
+
+```python Python
+test_client = PayoutBuilder(
+    base_url='http://127.0.0.1:8766',
+    api_key='test-api-key',
+    cert_path='./test-certs/client.pem',
+    key_path='./test-certs/client.key'
+)
+```
+
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Run your first payout
+  </Card>
+  <Card title="Security Guide" icon="shield" href="/guides/security">
+    Learn about security features
+  </Card>
+  <Card title="API Reference" icon="book" href="/reference/typescript/overview">
+    Explore the complete API
+  </Card>
+  <Card title="Testing Guide" icon="flask" href="/guides/testing">
+    Set up testing environment
+  </Card>
+</CardGroup>

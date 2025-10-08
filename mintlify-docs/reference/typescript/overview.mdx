@@ -1,0 +1,132 @@
+---
+title: 'TypeScript SDK Overview'
+description: 'Complete TypeScript SDK reference'
+---
+
+## Overview
+
+The TypeScript SDK provides a type-safe, production-ready interface to the Visa Direct API with comprehensive error handling, idempotency, and security features.
+
+## Installation
+
+```bash
+npm install visa-direct-sdk
+```
+
+## Quick Start
+
+```typescript
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({
+  baseUrl: 'https://sandbox.api.visa.com',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/visa-ca.pem'
+});
+
+const receipt = await PayoutBuilder.create(http)
+  .forOriginator('fi-001')
+  .withFundingInternal(true, 'LEDGER123')
+  .toCardDirect('tok_pan_411111******1111')
+  .forAmount('GBP', 5000)
+  .withIdempotencyKey('ts-reference-example')
+  .execute();
+```
+
+## Core Components
+
+<CardGroup cols={2}>
+  <Card title="PayoutBuilder" icon="code" href="/reference/typescript/builder">
+    Fluent API for building payout requests
+  </Card>
+  <Card title="Orchestrator" icon="zap" href="/reference/typescript/orchestrator">
+    Core orchestration engine with guards
+  </Card>
+  <Card title="SecureHttpClient" icon="shield" href="/reference/typescript/transport">
+    mTLS and MLE/JWE transport layer
+  </Card>
+  <Card title="Storage Interfaces" icon="database" href="/reference/typescript/storage">
+    Pluggable storage for idempotency and receipts
+  </Card>
+</CardGroup>
+
+## Type Safety
+
+The TypeScript SDK provides full type safety for all operations:
+
+```typescript
+import { PayoutBuilder, PayoutRequest } from 'visa-direct-sdk';
+
+const builder = PayoutBuilder.create(http);
+const request: PayoutRequest = builder
+  .forOriginator('fi-001')
+  .withFundingInternal(true, 'LEDGER123')
+  .toCardDirect('tok_pan_411111******1111')
+  .forAmount('GBP', 5000)
+  .withIdempotencyKey('typed-request')
+  .build();
+
+const receipt = await builder.execute();
+```
+
+## Error Handling
+
+Comprehensive error handling with typed exceptions:
+
+```typescript
+try {
+  const receipt = await client.payouts.build().execute();
+} catch (error) {
+  if (error instanceof LedgerNotConfirmed) {
+    // Handle ledger confirmation failure
+  } else if (error instanceof AFTDeclined) {
+    // Handle AFT decline
+  } else if (error instanceof ReceiptReused) {
+    // Handle receipt reuse
+  }
+}
+```
+
+## Configuration Options
+
+<ParamField path="SecureHttpClient" type="object">
+  <Param path="baseUrl" type="string" required>
+    Base URL for Visa Direct endpoints (sandbox or production)
+  </Param>
+  <Param path="certPath" type="string" required>
+    Path to client certificate (PEM)
+  </Param>
+  <Param path="keyPath" type="string" required>
+    Path to client private key (PEM)
+  </Param>
+  <Param path="caPath" type="string">
+    Optional Visa CA bundle
+  </Param>
+  <Param path="endpointsFile" type="string">
+    Optional endpoints JSON override
+  </Param>
+</ParamField>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="PayoutBuilder API" icon="code" href="/reference/typescript/builder">
+    Explore the fluent API
+  </Card>
+  <Card title="Orchestrator API" icon="zap" href="/reference/typescript/orchestrator">
+    Learn about the core engine
+  </Card>
+  <Card title="Transport Layer" icon="shield" href="/reference/typescript/transport">
+    Understand security features
+  </Card>
+  <Card title="Storage Interfaces" icon="database" href="/reference/typescript/storage">
+    Configure persistent storage
+  </Card>
+  <Card title="Policy Engine" icon="globe" href="/reference/typescript/policy">
+    Manage corridor rules
+  </Card>
+  <Card title="Telemetry" icon="activity" href="/reference/typescript/telemetry">
+    Wire up OpenTelemetry traces
+  </Card>
+</CardGroup>

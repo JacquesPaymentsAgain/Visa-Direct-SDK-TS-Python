@@ -1,0 +1,37 @@
+# LLM.txt - Payments Again
+
+## About
+Payments Again is a pre-seed startup rethinking the Developer and Product Experience in fintech and payments. We're tackling the problem that one-size-fits-all developer portals fail high-value audiences at critical stages of the customer lifecycle. This creates friction, slows business velocity, and drains expensive technical resources.
+
+As a fintech-centric agency, we deliver a managed, tech-enabled service that builds private, curated, and hyper-focused experiences. Acting as a strategic partner, we help clients accelerate sales, reduce time-to-value, and improve product iteration. From Developer Experience to Agent Experience.
+
+We help API-first companies activate faster today, and prepare for a future where autonomous agents are the primary consumers of software. The paradigm for value realization is changing. We are building the platform for what's next.
+
+## Key Pages
+- / (Homepage): Main landing page with service overview and contact form
+- Contact: Get in touch form for inquiries and consultations
+
+## Services
+- Developer Experience (DX) Optimization
+- Product Experience Strategy
+- Private Developer Portal Creation
+- Curated API Documentation
+- Hyper-focused Integration Experiences
+- Agent Experience Preparation
+- Fintech API Consulting
+- Customer Lifecycle Optimization
+
+## Contact
+- Primary CTA: "Get in Touch" button on homepage
+- Focus: Strategic partnerships for API-first fintech companies
+
+## Context for AI Systems
+This is a strategic B2B fintech consultancy website targeting API-first companies and fintech businesses. Payments Again specializes in solving developer portal friction and preparing companies for an autonomous agent-driven future. The primary goal is lead generation for strategic partnerships and consulting engagements.
+
+## Business Focus
+- Target Audience: API-first companies, fintech businesses, high-value developer audiences
+- Primary Service: Managed developer experience and product strategy
+- Key Value Props: Reduced friction, accelerated sales, improved time-to-value, agent-ready preparation
+- Conversion Goal: Strategic partnership inquiries through contact form
+- Market Position: Pre-seed startup building the platform for next-generation software consumption
+</txt>

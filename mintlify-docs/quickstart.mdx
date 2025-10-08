@@ -1,0 +1,132 @@
+---
+title: 'Quickstart'
+description: 'Get started with Visa Direct SDK in minutes'
+---
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Node.js 18+ or Python 3.9+
+- A Visa Direct API key and mTLS certificates
+- The local simulator running
+
+## Step 1: Start the Simulator
+
+First, start the local Flask simulator for testing:
+
+```bash
+cd simulator
+python app.py
+```
+
+The simulator will run on `http://127.0.0.1:8766`.
+
+## Step 2: Install the SDK
+
+Choose your preferred language:
+
+<CodeGroup>
+
+```bash TypeScript
+npm install visa-direct-sdk
+```
+
+```bash Python
+pip install visa-direct-sdk
+```
+
+</CodeGroup>
+
+## Step 3: Configure Your Client
+
+Set up your client with the necessary credentials:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({
+  baseUrl: 'http://127.0.0.1:8766',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/ca.pem'
+});
+
+const builder = PayoutBuilder.create(http);
+```
+
+```python Python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+http = SecureHttpClient(
+    base_url='http://127.0.0.1:8766',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/ca.pem'
+)
+
+builder = PayoutBuilder.create(http)
+```
+
+</CodeGroup>
+
+## Step 4: Execute Your First Payout
+
+Run a simple FI → Card payout:
+
+<CodeGroup>
+
+```typescript TypeScript
+const receipt = await builder
+  .forOriginator('fi-001')
+  .withFundingInternal(true, 'LEDGER123')
+  .toCardViaAlias({ alias: '+447911123456', aliasType: 'MOBILE' })
+  .forAmount('GBP', 5000)
+  .withIdempotencyKey('demo-fi-card')
+  .execute();
+
+console.log('Payout successful:', receipt);
+```
+
+```python Python
+receipt = builder \
+    .for_originator('fi-001') \
+    .with_funding_internal(True, 'LEDGER123') \
+    .to_card_via_alias('+447911123456', 'MOBILE') \
+    .for_amount('GBP', 5000) \
+    .with_idempotency_key('demo-fi-card') \
+    .execute()
+
+print('Payout successful:', receipt)
+```
+
+</CodeGroup>
+
+## What Happens Next?
+
+The SDK will automatically:
+
+1. **Resolve the alias** to get card details
+2. **Validate the funding** account and confirmation reference
+3. **Execute the payout** with proper error handling
+4. **Return a receipt** with transaction details
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Learn about advanced configuration options
+  </Card>
+  <Card title="API Reference" icon="book" href="/reference/typescript/overview">
+    Explore the complete API documentation
+  </Card>
+  <Card title="Security Guide" icon="shield" href="/installation#mtls-certificates">
+    Understand security features and best practices
+  </Card>
+  <Card title="Testing Guide" icon="flask" href="/installation#storage-configuration">
+    Learn how to test your integration
+  </Card>
+</CardGroup>

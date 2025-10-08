@@ -1,0 +1,60 @@
+---
+title: 'Orchestrator (TypeScript)'
+description: 'Execution engine for the TypeScript SDK'
+---
+
+## Overview
+
+`Orchestrator` enforces guards, runs the preflight pipeline, and dispatches payouts through `SecureHttpClient`.
+
+## Construction
+
+```typescript
+import { Orchestrator, SecureHttpClient } from 'visa-direct-sdk';
+
+const http = new SecureHttpClient({...});
+const orchestrator = new Orchestrator(http);
+```
+
+### Optional dependencies
+
+```typescript
+import { RedisIdempotencyStore, RedisReceiptStore } from 'visa-direct-sdk';
+
+const orchestrator = new Orchestrator(http, {
+  idempotencyStore: new RedisIdempotencyStore(redisClient),
+  receiptStore: new RedisReceiptStore(redisClient)
+});
+```
+
+## API
+
+<ParamField path="Orchestrator" type="object">
+  <Param path="payout(request)" type="Promise<any>">
+    Executes a payout request built by the builder.
+  </Param>
+  <Param path="idempotencyStore" type="IdempotencyStore">
+    Saga-level idempotency persistence.
+  </Param>
+  <Param path="receiptStore" type="ReceiptStore">
+    Single-use receipt enforcement for AFT/PIS.
+  </Param>
+  <Param path="events" type="CompensationEventEmitter">
+    Handle compensation events (default `LogEmitter`).
+  </Param>
+</ParamField>
+
+## Errors
+
+```typescript
+import {
+  LedgerNotConfirmed,
+  AFTDeclined,
+  PISFailed,
+  ReceiptReused,
+  QuoteRequiredError,
+  QuoteExpiredError
+} from 'visa-direct-sdk';
+```
+
+Catch these around `.execute()` or `orchestrator.payout(...)` to handle guard failures.

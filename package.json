@@ -1,0 +1,52 @@
+{
+  "name": "visa-direct-sdk-cursor-pack-v2",
+  "version": "1.0.0",
+  "description": "Visa Direct SDK & Orchestrator with DevX Surface",
+  "private": true,
+  "workspaces": [
+    "typescript-sdk",
+    "python-sdk",
+    "visa-direct-surface"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:simulator\" \"npm run dev:surface\"",
+    "dev:simulator": "cd simulator && python app.py",
+    "dev:surface": "cd visa-direct-surface && npm run dev",
+    "dev:docs": "cd mintlify-docs && mintlify dev",
+    "dev:all": "concurrently \"npm run dev:simulator\" \"npm run dev:surface\" \"npm run dev:docs\"",
+    "dev:ts": "cd typescript-sdk && npm run dev",
+    "dev:py": "cd python-sdk && python -m venv .venv && source .venv/bin/activate && pip install -e .",
+    "build": "npm run build:ts && npm run build:py && npm run build:surface",
+    "build:ts": "cd typescript-sdk && npm run build",
+    "build:py": "cd python-sdk && pip install -e .",
+    "build:surface": "cd visa-direct-surface && npm run build",
+    "build:docs": "cd mintlify-docs && mintlify build",
+    "test": "npm run test:ts && npm run test:py",
+    "test:ts": "cd typescript-sdk && npm test",
+    "test:py": "cd python-sdk && python -m pytest",
+    "install:all": "npm install && cd typescript-sdk && npm install && cd ../visa-direct-surface && npm install",
+    "clean": "rm -rf node_modules typescript-sdk/node_modules visa-direct-surface/node_modules python-sdk/.venv",
+    "start": "npm run dev",
+    "deploy:docs": "cd mintlify-docs && mintlify deploy"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "visa-direct",
+    "sdk",
+    "typescript",
+    "python",
+    "payments",
+    "fintech",
+    "orchestrator",
+    "mintlify",
+    "documentation"
+  ],
+  "author": "Visa Direct Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python.git"
+  }
+}

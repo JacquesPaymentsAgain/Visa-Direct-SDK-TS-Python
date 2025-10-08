@@ -1,0 +1,79 @@
+---
+title: 'PayoutBuilder (Python)'
+description: 'Fluent payout builder for the Python SDK'
+---
+
+## Overview
+
+`PayoutBuilder.create(http_client)` returns a fluent interface that mirrors the TypeScript builder.
+
+## Creating a Builder
+
+```python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+http = SecureHttpClient(base_url='http://127.0.0.1:8766')
+builder = PayoutBuilder.create(http)
+```
+
+## Core Methods
+
+<ParamField path="PayoutBuilder" type="object">
+  <Param path="for_originator(originator_id)" type="str">
+    Set the originator identifier.
+  </Param>
+  <Param path="with_funding_internal(debit_confirmed, confirmation_ref)" type="bool, str">
+    Internal ledger funding guard.
+  </Param>
+  <Param path="with_funding_from_card(receipt_id, status)" type="str, str">
+    AFT funding with single-use receipts.
+  </Param>
+  <Param path="with_funding_from_external(payment_id, status)" type="str, str">
+    PIS funding hook.
+  </Param>
+  <Param path="to_card_direct(pan_token)" type="str">
+    Direct OCT destination.
+  </Param>
+  <Param path="to_card_via_alias(alias, alias_type='EMAIL')" type="str, str">
+    Alias → PAV → FTAI chain.
+  </Param>
+  <Param path="to_account(account_id)" type="str">
+    Account payout endpoint.
+  </Param>
+  <Param path="to_wallet(wallet_id)" type="str">
+    Wallet payout endpoint.
+  </Param>
+  <Param path="for_amount(currency, minor)" type="str, int">
+    Amount object.
+  </Param>
+  <Param path="with_quote_lock(src_currency, dst_currency)" type="str, str">
+    Request FX lock (requires corridor rules).
+  </Param>
+  <Param path="for_corridor(source_country, target_country, ...)" type="str, str">
+    Attach corridor metadata for policy enforcement.
+  </Param>
+  <Param path="with_idempotency_key(key)" type="str">
+    Provide explicit idempotency key.
+  </Param>
+  <Param path="with_compliance(payload)" type="dict">
+    Attach compliance payload forwarded to orchestrator.
+  </Param>
+  <Param path="execute()" type="dict">
+    Run the payout through the orchestrator.
+  </Param>
+</ParamField>
+
+## Example
+
+```python
+receipt = PayoutBuilder.create(http) \
+    .for_originator('fi-001') \
+    .with_funding_internal(True, 'LEDGER123') \
+    .to_card_via_alias('+447911123456', 'MOBILE') \
+    .with_quote_lock('GBP', 'INR') \
+    .for_corridor('GB', 'IN', source_currency='GBP', target_currency='INR') \
+    .for_amount('INR', 410000) \
+    .with_idempotency_key('corridor-demo') \
+    .execute()
+```

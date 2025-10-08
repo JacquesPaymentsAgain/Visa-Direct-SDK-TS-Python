@@ -40,12 +40,12 @@ result = builder \
 - `with_idempotency_key(key: str)` - Set idempotency key
 
 #### Advanced Methods
-- `to_card_via_alias(alias: str, alias_type: str = 'EMAIL')` - Resolve alias to panToken
-- `with_quote_lock(src_currency: str, dst_currency: str)` - Lock FX quote
-- `with_compliance(payload)` - Add compliance screening
+- `to_card_via_alias(alias: str, alias_type: str = 'EMAIL')` - Queue alias resolution for orchestrator preflight
+- `with_quote_lock(src_currency: str, dst_currency: str)` - Request FX lock during preflight
+- `with_compliance(payload)` - Attach compliance payload for screening
 
 #### Execution
-- `execute()` - Execute the payout (enforces FX policy)
+- `execute()` - Builds the payout request and delegates to the orchestrator (FX policy and compliance enforced centrally)
 
 ### Orchestrator
 
@@ -63,9 +63,9 @@ result = builder \
 
 #### MLE/JWE Support
 - Conditional encryption based on `requires_mle(path)` from config
-- JWKS cache with TTL and 1x retry on `kid` mismatch
+- JWKS cache with TTL, retry on `kid` mismatch, and environment-aware fallbacks
 - Production mode: fail-closed when JWKS unavailable
-- Dev mode: no-op passthrough for simulator
+- Dev mode: JSON passthrough when JWKS is absent (simulator-friendly)
 
 #### mTLS Support
 ```python
@@ -81,13 +81,13 @@ client = SecureHttpClient(
 ### Preflight Services
 
 #### RecipientService
-- `resolve_alias(alias, alias_type)` - Resolve alias to credentials
-- `pav(pan_token)` - Card validation
-- `ftai(pan_token)` - Fund transfer attributes inquiry
-- `validate(destination_hash, payload)` - Account/wallet validation
+- `resolve_alias(alias, alias_type)` - Resolve alias with background cache revalidation
+- `pav(pan_token)` - Card validation with revalidation
+- `ftai(pan_token)` - Fund transfer attributes inquiry with revalidation
+- `validate(destination_hash, payload)` - Account/wallet validation with revalidation
 
 #### QuotingService
-- `lock(src_currency, dst_currency, amount_minor)` - Lock FX quote
+- `lock(src_currency, dst_currency, amount_minor)` - Lock FX quote with background refresh
 
 ### Storage Interfaces
 
@@ -109,6 +109,7 @@ class ReceiptStore:
 class Cache:
     def get(self, key: str) -> Optional[Any]: ...
     def set(self, key: str, value: Any, ttl_seconds: int) -> None: ...
+    def get_with_revalidate(self, key: str) -> tuple[Optional[Any], bool]: ...
 ```
 
 ## Error Handling
@@ -154,7 +155,7 @@ The SDK reads from `endpoints/endpoints.json`:
   "routes": [
     {
       "path": "/visadirect/fundstransfer/v1/pushfunds",
-      "requiresMLE": false
+      "requiresMLE": true
     }
   ],
   "jwks": {

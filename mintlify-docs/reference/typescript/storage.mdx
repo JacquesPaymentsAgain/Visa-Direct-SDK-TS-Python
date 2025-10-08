@@ -1,0 +1,52 @@
+---
+title: 'Storage Interfaces (TypeScript)'
+description: 'Configure idempotency, receipts, and cache adapters'
+---
+
+## Overview
+
+The TypeScript SDK ships with in-memory defaults plus Redis and DynamoDB adapters.
+
+## Default (In-Memory)
+
+```typescript
+import { Orchestrator } from 'visa-direct-sdk';
+
+const orchestrator = new Orchestrator(http); // in-memory stores
+```
+
+## Redis
+
+```typescript
+import { Redis } from 'ioredis';
+import { Orchestrator, RedisIdempotencyStore, RedisReceiptStore } from 'visa-direct-sdk';
+
+const redis = new Redis(process.env.REDIS_URL!);
+const orchestrator = new Orchestrator(http, {
+  idempotencyStore: new RedisIdempotencyStore(redis),
+  receiptStore: new RedisReceiptStore(redis)
+});
+```
+
+## DynamoDB
+
+```typescript
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { Orchestrator, DynamoIdempotencyStore, DynamoReceiptStore } from 'visa-direct-sdk';
+
+const dynamo = new DynamoDBClient({ region: 'us-east-1' });
+const orchestrator = new Orchestrator(http, {
+  idempotencyStore: new DynamoIdempotencyStore('visa-direct-idempotency', dynamo),
+  receiptStore: new DynamoReceiptStore('visa-direct-receipts', dynamo)
+});
+```
+
+## Cache Adapter
+
+Use `DynamoCache` when you need shared caching for alias/PAV/FTAI lookups:
+
+```typescript
+import { DynamoCache } from 'visa-direct-sdk';
+
+const cache = new DynamoCache('visa-direct-cache', dynamoClient);
+```

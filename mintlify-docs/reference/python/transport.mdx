@@ -1,0 +1,53 @@
+---
+title: 'SecureHttpClient (Python)'
+description: 'mTLS + MLE transport for the Python SDK'
+---
+
+## Overview
+
+`SecureHttpClient` wraps `requests` with mTLS, MLE/JWE, JWKS caching, and retry logic.
+
+## Basic Usage
+
+```python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+
+client = SecureHttpClient(
+    base_url='https://sandbox.api.visa.com',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/visa-ca.pem'
+)
+```
+
+## Parameters
+
+<ParamField path="SecureHttpClient" type="object">
+  <Param path="base_url" type="str" required>
+    Visa Direct base URL.
+  </Param>
+  <Param path="cert_path" type="str" required>
+    Client certificate (PEM).
+  </Param>
+  <Param path="key_path" type="str" required>
+    Client private key (PEM).
+  </Param>
+  <Param path="ca_path" type="str">
+    CA bundle for Visa endpoints.
+  </Param>
+  <Param path="endpoints_file" type="str">
+    Optional JSON file for simulator/demo overrides.
+  </Param>
+</ParamField>
+
+## Adding Headers
+
+Inject Visa API keys or signatures using request hooks:
+
+```python
+def add_headers(method, url, headers, body):
+    headers['x-api-key'] = 'your-api-key'
+    return method, url, headers, body
+
+client.request_hooks.append(add_headers)
+```

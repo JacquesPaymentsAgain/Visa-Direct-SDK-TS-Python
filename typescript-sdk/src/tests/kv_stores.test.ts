@@ -8,8 +8,9 @@ async function main() {
 	const sharedIdem = new InMemoryIdempotencyStore<any>();
 	const sharedReceipts = new InMemoryReceiptStore();
 
-	const orchA = new Orchestrator(http, sharedIdem, sharedReceipts);
-	const orchB = new Orchestrator(http, sharedIdem, sharedReceipts);
+	const options = { idempotencyStore: sharedIdem, receiptStore: sharedReceipts };
+	const orchA = new Orchestrator(http, options);
+	const orchB = new Orchestrator(http, options);
 
 	const reqBase = {
 		originatorId: 'fi-001',
@@ -34,5 +35,4 @@ async function main() {
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
-
 

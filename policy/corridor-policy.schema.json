@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Visa Direct Corridor Policy",
+  "type": "object",
+  "required": ["version", "corridors"],
+  "properties": {
+    "version": { "type": "string" },
+    "corridors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceCountry", "targetCountry", "rules"],
+        "properties": {
+          "sourceCountry": { "type": "string", "minLength": 2, "maxLength": 2 },
+          "targetCountry": { "type": "string", "minLength": 2, "maxLength": 2 },
+          "currencies": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string", "minLength": 3, "maxLength": 3 },
+              "target": { "type": "string", "minLength": 3, "maxLength": 3 }
+            },
+            "additionalProperties": false
+          },
+          "rules": {
+            "type": "object",
+            "properties": {
+              "fx": {
+                "type": "object",
+                "properties": {
+                  "lockRequired": { "type": "boolean" },
+                  "slippageBpsMax": { "type": "number", "minimum": 0 }
+                },
+                "additionalProperties": false
+              },
+              "compliance": {
+                "type": "object",
+                "properties": {
+                  "scope": { "type": "string", "enum": ["all", "cross-border-only"] }
+                },
+                "additionalProperties": false
+              },
+              "rails": {
+                "type": "object",
+                "properties": {
+                  "allowedDestinations": {
+                    "type": "array",
+                    "items": { "type": "string", "enum": ["card", "account", "wallet"] }
+                  },
+                  "fallbacks": {
+                    "type": "array",
+                    "items": { "type": "string", "enum": ["card", "account", "wallet"] }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "limits": {
+                "type": "object",
+                "properties": {
+                  "maxValueMinor": { "type": "number", "minimum": 0 },
+                  "dailyCountMax": { "type": "number", "minimum": 0 }
+                },
+                "additionalProperties": false
+              },
+              "sla": {
+                "type": "object",
+                "properties": {
+                  "etaSeconds": { "type": "number", "minimum": 0 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
