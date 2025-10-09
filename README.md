@@ -4,6 +4,17 @@ A production-grade dual-language SDK (TypeScript + Python) with a unified Visa D
 
 ## 🚀 Quick Start
 
+### **Environment Configuration (Choose Your Setup)**
+```bash
+# Configure for Local Simulator (Recommended for Development)
+./configure_environment.sh simulator
+source .env.current
+
+# Configure for Live Visa Sandbox (Production Testing)
+./configure_environment.sh live
+source .env.current
+```
+
 ### **Unified Development (Recommended)**
 ```bash
 # Install all dependencies
@@ -16,6 +27,14 @@ npm run dev:all
 npm run dev:simulator    # Flask simulator on :8766
 npm run dev:surface      # Next.js Dashboard on :3000
 npm run dev:docs         # Mintlify docs on :3001
+```
+
+### **Pilot Testing (Ready for Production)**
+```bash
+# Run comprehensive pilot tests
+npm run pilot:ts         # TypeScript pilot transactions
+npm run pilot:py         # Python pilot transactions
+npm run pilot:gb-ph      # GB→PH cross-border pilot
 ```
 
 ### **Individual Component Setup**
@@ -89,11 +108,17 @@ visa-direct-sdk-cursor-pack-v2/
 │   ├── reference/               # API reference
 │   └── guides/                  # Tutorial guides
 ├── 📁 simulator/                # Local Flask Simulator
-│   ├── app.py
-│   └── requirements.txt
+│   ├── app.py                   # Comprehensive API simulator
+│   ├── requirements.txt         # Python dependencies
+│   └── README.md               # Simulator documentation
 ├── 📁 endpoints/                # API Configuration
-│   └── endpoints.json
+│   └── endpoints.json          # Endpoint definitions
 ├── 📁 policy/                   # Policy Engine
+│   ├── corridor-policy.json    # Transaction corridor rules
+│   └── corridor-policy.schema.json
+├── 📁 VDP/                      # Visa Developer Platform certificates
+├── 📄 configure_environment.sh  # Environment configuration tool
+├── 📄 run_comprehensive_tests.sh # Test suite runner
 └── 📄 package.json             # Root package.json (unified scripts)
 ```
 
@@ -116,13 +141,21 @@ visa-direct-sdk-cursor-pack-v2/
 ### **3. Production SDKs**
 - **TypeScript SDK** - Full type safety and modern JavaScript features
 - **Python SDK** - Identical API with comprehensive error handling
-- **Local Simulator** - Flask-based simulator for testing
+- **Local Simulator** - Comprehensive Flask-based simulator (11 endpoints)
 - **Security Features** - mTLS, MLE/JWE, idempotency, and guards
+- **Environment Switching** - Seamless simulator ↔ live sandbox switching
+- **Pilot Testing** - Production-ready transaction testing
 
 ## 🔧 Development Commands
 
 ### **Unified Commands (Root Directory)**
 ```bash
+# Environment Management
+./configure_environment.sh simulator  # Switch to simulator
+./configure_environment.sh live      # Switch to live sandbox
+./configure_environment.sh status    # Show current status
+
+# Development
 npm run dev:all              # Start simulator + dashboard + docs
 npm run dev                  # Start simulator + dashboard
 npm run dev:docs             # Start Mintlify documentation
@@ -131,6 +164,12 @@ npm run build:docs           # Build Mintlify documentation
 npm run test                 # Run all tests
 npm run install:all          # Install all dependencies
 npm run deploy:docs          # Deploy docs to Mintlify
+
+# Pilot Testing
+npm run pilot:ts             # TypeScript pilot transactions
+npm run pilot:py             # Python pilot transactions
+npm run pilot:gb-ph          # GB→PH cross-border pilot
+./run_comprehensive_tests.sh # Full test suite
 ```
 
 ### **Individual Component Commands**

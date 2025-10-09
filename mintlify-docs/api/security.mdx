@@ -1,0 +1,407 @@
+---
+title: Security API
+icon: shield
+api: 'POST /v1/security/validate'
+---
+
+# Security API
+
+The Security API provides comprehensive security features for Visa Direct transactions.
+
+## Overview
+
+The Security API includes multiple layers of protection:
+
+- **mTLS Authentication** - Mutual TLS for secure communication
+- **JWE Encryption** - JSON Web Encryption for sensitive data
+- **JWKS Management** - JSON Web Key Set for key rotation
+- **Fail-Closed Mechanisms** - Security-first error handling
+
+## Request Parameters
+
+<ParamField path="operation" type="string" required>
+The security operation to perform.
+
+**Options:**
+- `mtls_validate` - Validate mTLS certificate
+- `jwe_encrypt` - Encrypt sensitive data
+- `jwe_decrypt` - Decrypt JWE data
+- `jwks_refresh` - Refresh JWKS keys
+- `security_validate` - Validate security requirements
+</ParamField>
+
+<ParamField path="certificate" type="object">
+Certificate details for mTLS validation.
+
+**Properties:**
+- `cert` - Certificate content or path
+- `key` - Private key content or path
+- `ca` - Certificate Authority content or path
+</ParamField>
+
+<ParamField path="jwe" type="object">
+JWE encryption details.
+
+**Properties:**
+- `publicKey` - Public key for encryption
+- `privateKey` - Private key for decryption
+- `algorithm` - Encryption algorithm (default: "RSA-OAEP-256")
+- `encryption` - Content encryption (default: "A256GCM")
+</ParamField>
+
+<ParamField path="payload" type="object">
+Data to encrypt or validate.
+
+**Properties:**
+- `pan` - Primary Account Number
+- `cvv` - Card verification value
+- `expiryDate` - Card expiry date
+- `metadata` - Additional sensitive data
+</ParamField>
+
+<ParamField path="jwks" type="object">
+JWKS configuration.
+
+**Properties:**
+- `endpoint` - JWKS endpoint URL
+- `keyId` - Specific key identifier
+- `cacheTtl` - Cache time-to-live in seconds
+</ParamField>
+
+<ParamField path="environment" type="string">
+Environment configuration for fail-closed behavior.
+
+**Options:**
+- `production` - Fail-closed on security errors
+- `development` - Permissive mode for testing
+- `staging` - Balanced security mode
+</ParamField>
+
+<ParamField path="validateCertificate" type="(cert: Certificate) => Promise<boolean>">
+Validates certificate format and expiration.
+
+**Parameters:**
+- `cert` - Certificate to validate
+
+**Returns:** Promise resolving to validation result
+</ParamField>
+
+## JWE Encryption
+
+### Encryption Configuration
+
+```typescript
+const client = new VisaDirectClient({
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY,
+    algorithm: 'RSA-OAEP-256',
+    encryption: 'A256GCM'
+  }
+});
+```
+
+### Encryption Methods
+
+<ParamField path="encrypt" type="(payload: any, keyId?: string) => Promise<string>">
+Encrypts sensitive data using JWE.
+
+**Parameters:**
+- `payload` - Data to encrypt
+- `keyId` - Optional key identifier
+
+**Returns:** Promise resolving to encrypted JWE string
+</ParamField>
+
+<ParamField path="decrypt" type="(jwe: string) => Promise<any>">
+Decrypts JWE encrypted data.
+
+**Parameters:**
+- `jwe` - Encrypted JWE string
+
+**Returns:** Promise resolving to decrypted payload
+</ParamField>
+
+### Usage Example
+
+```typescript
+const secureClient = new SecureHttpClient({
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  }
+});
+
+// Encrypt sensitive data
+const encrypted = await secureClient.encrypt({
+  pan: '4000000000000000',
+  cvv: '123'
+});
+
+// Decrypt response
+const decrypted = await secureClient.decrypt(encrypted);
+```
+
+## JWKS Management
+
+### Key Rotation Support
+
+The SDK supports automatic key rotation through JWKS:
+
+```typescript
+const client = new VisaDirectClient({
+  jwks: {
+    endpoint: 'https://api.visa.com/.well-known/jwks.json',
+    cacheTtl: 3600, // 1 hour
+    retryOnKidMiss: true
+  }
+});
+```
+
+### JWKS Methods
+
+<ParamField path="getKey" type="(keyId: string) => Promise<JWK>">
+Retrieves a key from JWKS endpoint.
+
+**Parameters:**
+- `keyId` - Key identifier
+
+**Returns:** Promise resolving to JSON Web Key
+</ParamField>
+
+<ParamField path="refreshKeys" type="() => Promise<void>">
+Refreshes the JWKS cache.
+
+**Returns:** Promise resolving when keys are refreshed
+</ParamField>
+
+### Automatic Retry
+
+When a key ID is not found, the SDK automatically refreshes the JWKS:
+
+```typescript
+try {
+  const encrypted = await client.encrypt(payload, 'unknown-key-id');
+} catch (error) {
+  if (error instanceof JWEKidUnknownError) {
+    // SDK automatically retries after refreshing JWKS
+    // If still unknown, error is thrown
+  }
+}
+```
+
+## Fail-Closed Mechanisms
+
+### Production Mode
+
+In production environments, security failures cause the system to fail closed:
+
+```typescript
+const client = new VisaDirectClient({
+  environment: 'production',
+  failClosed: true, // Default for production
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  }
+});
+
+// If JWE keys are unavailable, transactions will fail
+// This prevents unencrypted sensitive data transmission
+```
+
+### Development Mode
+
+In development, the system can be configured to be more permissive:
+
+```typescript
+const client = new VisaDirectClient({
+  environment: 'development',
+  failClosed: false, // Allow unencrypted in dev
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  }
+});
+```
+
+## Security Guards
+
+### Built-in Guards
+
+The SDK includes several security guards:
+
+#### LedgerGuard
+Ensures ledger confirmation before funding:
+
+```typescript
+// Automatically applied for internal account funding
+const receipt = await client.payouts.build()
+  .withFundingFromInternalAccount({
+    accountId: 'ACCOUNT_123',
+    confirmationRef: 'LEDGER_CONFIRM_456' // Required
+  })
+  .execute();
+```
+
+#### FundingGuard
+Prevents receipt reuse:
+
+```typescript
+// Automatically applied for AFT/PIS funding
+const receipt = await client.payouts.build()
+  .withFundingFromAFT({
+    accountId: 'ACCOUNT_123',
+    receiptId: 'AFT_RECEIPT_789' // Single-use only
+  })
+  .execute();
+```
+
+### Custom Guards
+
+You can implement custom security guards:
+
+```typescript
+class CustomSecurityGuard implements Guard {
+  async validate(request: PayoutRequest): Promise<void> {
+    // Custom security validation
+    if (request.amount.valueMinor > 100000) {
+      throw new SecurityValidationError('Amount exceeds limit');
+    }
+  }
+}
+
+const client = new VisaDirectClient({
+  guards: [new CustomSecurityGuard()]
+});
+```
+
+## Compliance Integration
+
+### Compliance Screening
+
+```typescript
+const complianceResult = await client.compliance.screen({
+  customerId: 'CUST_12345',
+  transactionType: 'P2P_PAYMENT',
+  amount: { currency: 'USD', valueMinor: 5000 },
+  riskLevel: 'LOW'
+});
+
+if (!complianceResult.approved) {
+  throw new ComplianceRejectedError(complianceResult.reason);
+}
+```
+
+### Audit Logging
+
+All security events are automatically logged:
+
+```typescript
+// Security events are logged automatically:
+// - mTLS handshake success/failure
+// - JWE encryption/decryption
+// - JWKS key retrieval
+// - Guard validation results
+// - Compliance screening results
+```
+
+## Error Handling
+
+### Security Errors
+
+<ParamField path="MTLSError" type="Error">
+Thrown when mTLS authentication fails.
+</ParamField>
+
+<ParamField path="JWEEncryptError" type="Error">
+Thrown when JWE encryption fails.
+</ParamField>
+
+<ParamField path="JWEDecryptError" type="Error">
+Thrown when JWE decryption fails.
+</ParamField>
+
+<ParamField path="JWEKidUnknownError" type="Error">
+Thrown when JWE key ID is unknown after JWKS refresh.
+</ParamField>
+
+<ParamField path="SecurityValidationError" type="Error">
+Thrown when security validation fails.
+</ParamField>
+
+### Error Handling Example
+
+```typescript
+try {
+  const receipt = await client.payouts.build()...execute();
+} catch (error) {
+  if (error instanceof MTLSError) {
+    console.log('mTLS authentication failed');
+  } else if (error instanceof JWEEncryptError) {
+    console.log('JWE encryption failed');
+  } else if (error instanceof SecurityValidationError) {
+    console.log('Security validation failed:', error.message);
+  } else {
+    console.log('Unexpected error:', error.message);
+  }
+}
+```
+
+## Monitoring and Telemetry
+
+### Security Metrics
+
+The SDK exposes security-related metrics:
+
+- **mTLS handshake success rate**
+- **JWE encryption/decryption success rate**
+- **JWKS key retrieval success rate**
+- **Guard validation success rate**
+- **Compliance screening results**
+
+### Telemetry Integration
+
+```typescript
+import { OpenTelemetry } from 'visa-direct-sdk';
+
+const telemetry = new OpenTelemetry({
+  serviceName: 'visa-direct-security',
+  version: '1.0.0'
+});
+
+// Security events are automatically instrumented
+const receipt = await client.payouts.build()...execute();
+```
+
+## Best Practices
+
+### Certificate Management
+- Use strong certificate algorithms (RSA 2048+ or ECDSA P-256+)
+- Implement certificate rotation procedures
+- Monitor certificate expiration dates
+- Use secure storage for private keys
+
+### Key Management
+- Rotate JWE keys regularly
+- Use separate keys for different environments
+- Implement secure key distribution
+- Monitor key usage patterns
+
+### Error Handling
+- Implement fail-closed behavior in production
+- Log all security failures for analysis
+- Use circuit breakers for external security services
+- Implement proper retry mechanisms
+
+### Monitoring
+- Monitor security metrics continuously
+- Set up alerts for security failures
+- Track compliance screening results
+- Monitor for suspicious patterns
+
+### Compliance
+- Follow PCI DSS requirements
+- Implement proper audit logging
+- Use secure communication channels
+- Maintain compliance documentation

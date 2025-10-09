@@ -5,3 +5,4 @@ from .policy.corridor_policy import load_policy, get_rules, PolicyNotFoundError,
 from .storage.idempotency_store import InMemoryIdempotencyStore, RedisIdempotencyStore, DynamoIdempotencyStore  # noqa: F401
 from .storage.receipt_store import InMemoryReceiptStore, RedisReceiptStore, DynamoReceiptStore  # noqa: F401
 from .storage.cache import InMemoryCache, DynamoCache  # noqa: F401
+from .client import VisaDirectClient, VisaDirectClientConfig  # noqa: F401

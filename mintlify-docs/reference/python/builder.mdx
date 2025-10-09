@@ -64,6 +64,13 @@ builder = PayoutBuilder.create(http)
   </Param>
 </ParamField>
 
+## Funding status values
+
+- `with_funding_from_card` expects `status` to be `'approved'` or `'declined'`.
+- `with_funding_from_external` expects `status` to be `'executed'` or `'failed'`.
+
+Passing any other value will trigger guard failures in the orchestrator.
+
 ## Example
 
 ```python

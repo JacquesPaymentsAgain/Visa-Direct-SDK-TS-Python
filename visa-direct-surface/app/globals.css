@@ -10,15 +10,35 @@
 
 @layer base {
   :root {
+    /* Typography - Unified Font System */
     --font-sans: var(--font-inter);
-    --font-mono: var(--font-geist-mono);
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    
+    /* Typography Scale - Consistent across all apps */
+    --text-xs: 0.75rem;     /* 12px */
+    --text-sm: 0.875rem;    /* 14px */
+    --text-base: 1rem;      /* 16px */
+    --text-lg: 1.125rem;    /* 18px */
+    --text-xl: 1.25rem;     /* 20px */
+    --text-2xl: 1.5rem;     /* 24px */
+    --text-3xl: 1.875rem;   /* 30px */
+    --text-4xl: 2.25rem;    /* 36px */
+    
+    /* Line Heights - Optimized for Inter */
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 2;
+    
+    /* Colors - Professional Fintech Palette */
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
+    --primary: 217 91% 60%; /* Blue 600 #2563eb */
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
@@ -30,7 +50,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --ring: 217 91% 60%; /* Blue 600 */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -88,6 +108,53 @@
   }
   /* Removed bg-background from body to allow page gradient to show */
   body {
-    @apply text-foreground;
+    @apply text-foreground font-sans;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+  
+  /* Typography Classes - Consistent across all apps */
+  .text-sidebar {
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    font-weight: 500;
+  }
+  
+  .text-sidebar-label {
+    font-size: var(--text-xs);
+    line-height: var(--leading-tight);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .text-body {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  
+  .text-body-sm {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+  
+  .text-heading {
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    font-weight: 600;
+  }
+  
+  .text-heading-lg {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+    font-weight: 700;
+  }
+  
+  /* Code/Mono Typography */
+  code, pre {
+    font-family: var(--font-mono), 'Courier New', monospace;
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
   }
 }

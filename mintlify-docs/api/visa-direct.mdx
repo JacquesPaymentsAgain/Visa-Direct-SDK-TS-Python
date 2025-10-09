@@ -1,0 +1,123 @@
+---
+title: 'Visa Direct API Reference'
+description: 'Interactive API documentation with live examples and testing capabilities'
+keywords: ['api', 'visa direct', 'payouts', 'preflight', 'funding', 'interactive']
+---
+
+<Callout icon="play">
+  **Interactive Testing**: Use the API playground below to test endpoints directly against our simulator. All examples are pre-filled with realistic data and support multiple programming languages.
+</Callout>
+
+<Callout icon="shield">
+  **Security**: This API requires mTLS authentication and JWE encryption for sensitive endpoints. Use our SDK for production implementations.
+</Callout>
+
+## API Overview
+
+The Visa Direct Surface API provides a curated subset of Visa Direct endpoints optimized for the developer experience. The API includes:
+
+<CardGroup cols={2}>
+  <Card title="Preflight Services" icon="search">
+    Alias resolution, card validation, and fund transfer attributes inquiry
+  </Card>
+  <Card title="Funding Operations" icon="credit-card">
+    Pull funds (AFT/PIS) for account funding and validation
+  </Card>
+  <Card title="Payout Execution" icon="send">
+    Push funds to cards, accounts, and wallets via OCT
+  </Card>
+  <Card title="Status Tracking" icon="activity">
+    Real-time payout status and transaction monitoring
+  </Card>
+</CardGroup>
+
+## Authentication
+
+All endpoints require mTLS authentication with optional API key headers:
+
+<CodeGroup>
+
+```bash curl
+curl -X POST "https://sandbox.api.visa.com/visaaliasdirectory/v1/resolve" \
+  --cert client.pem \
+  --key client.key \
+  --cacert ca.pem \
+  -H "Content-Type: application/json" \
+  -d '{"alias": "user@example.com", "aliasType": "EMAIL"}'
+```
+
+```typescript TypeScript
+import { SecureHttpClient } from 'visa-direct-sdk';
+
+const client = new SecureHttpClient({
+  baseUrl: 'https://sandbox.api.visa.com',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/ca.pem'
+});
+```
+
+```python Python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+
+client = SecureHttpClient(
+    base_url='https://sandbox.api.visa.com',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/ca.pem'
+)
+```
+
+</CodeGroup>
+
+## Interactive API Reference
+
+<OpenAPI specUrl="/openapi/visa-direct-surface.yaml" />
+
+## SDK Integration
+
+For production applications, use our official SDKs which handle authentication, error handling, and retry logic automatically:
+
+<CardGroup cols={2}>
+  <Card title="TypeScript SDK" icon="typescript" href="/reference/typescript/overview">
+    Full type safety with modern JavaScript features
+  </Card>
+  <Card title="Python SDK" icon="python" href="/reference/python/overview">
+    Identical API with comprehensive error handling
+  </Card>
+</CardGroup>
+
+## Testing & Development
+
+<Steps>
+  <Step title="Start the Simulator">
+    Run our local Flask simulator for development and testing:
+    ```bash
+    cd simulator
+    python app.py
+    ```
+  </Step>
+  <Step title="Configure Your Client">
+    Point your client to the simulator URL:
+    ```typescript
+    const client = new SecureHttpClient({
+      baseUrl: 'http://127.0.0.1:8766'
+    });
+    ```
+  </Step>
+  <Step title="Test Endpoints">
+    Use the interactive playground above or run SDK examples to test your integration.
+  </Step>
+</Steps>
+
+## Production Considerations
+
+<Warning>
+  This API specification is optimized for developer experience. For production implementations, refer to the official Visa Developer documentation for complete payload requirements and compliance guidelines.
+</Warning>
+
+- **mTLS Certificates**: Required for all production environments
+- **JWE Encryption**: Mandatory for sensitive data endpoints
+- **Idempotency**: Use unique keys for retry scenarios
+- **Rate Limits**: Implement proper throttling and retry logic
+- **Monitoring**: Set up comprehensive logging and alerting

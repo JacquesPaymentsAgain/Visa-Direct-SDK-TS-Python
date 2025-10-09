@@ -1,0 +1,236 @@
+---
+title: 'Security Guide'
+description: 'Comprehensive security best practices for Visa Direct SDK implementation'
+icon: shield
+keywords: ['security', 'mtls', 'jwe', 'encryption', 'authentication', 'certificates']
+---
+
+# Security Guide
+
+This guide covers security best practices for implementing the Visa Direct SDK in production environments.
+
+## Authentication Methods
+
+### mTLS Authentication
+
+Mutual TLS (mTLS) is required for all production Visa Direct API calls:
+
+<CodeGroup>
+
+```typescript TypeScript
+import { SecureHttpClient } from 'visa-direct-sdk';
+
+const client = new SecureHttpClient({
+  baseUrl: 'https://api.visa.com',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/ca.pem'
+});
+```
+
+```python Python
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+
+client = SecureHttpClient(
+    base_url='https://api.visa.com',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/ca.pem'
+)
+```
+
+</CodeGroup>
+
+### JWE Encryption
+
+JWE (JSON Web Encryption) is required for sensitive endpoints:
+
+<CodeGroup>
+
+```typescript TypeScript
+const client = new SecureHttpClient({
+  baseUrl: 'https://api.visa.com',
+  certPath: './certs/client.pem',
+  keyPath: './certs/client.key',
+  caPath: './certs/ca.pem',
+  jwe: {
+    publicKey: './certs/jwe_public.pem',
+    privateKey: './certs/jwe_private.pem'
+  }
+});
+```
+
+```python Python
+client = SecureHttpClient(
+    base_url='https://api.visa.com',
+    cert_path='./certs/client.pem',
+    key_path='./certs/client.key',
+    ca_path='./certs/ca.pem',
+    jwe_public_key='./certs/jwe_public.pem',
+    jwe_private_key='./certs/jwe_private.pem'
+)
+```
+
+</CodeGroup>
+
+## Certificate Management
+
+### Certificate Storage
+
+- Store certificates in secure, encrypted storage
+- Use environment variables for certificate paths
+- Implement certificate rotation procedures
+- Monitor certificate expiration dates
+
+### Certificate Validation
+
+```typescript
+// Validate certificate before use
+import fs from 'fs';
+import { X509Certificate } from 'crypto';
+
+function validateCertificate(certPath: string): boolean {
+  try {
+    const certData = fs.readFileSync(certPath);
+    const cert = new X509Certificate(certData);
+    
+    // Check expiration
+    const now = new Date();
+    const expiry = new Date(cert.validTo);
+    
+    if (now > expiry) {
+      throw new Error('Certificate has expired');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Certificate validation failed:', error);
+    return false;
+  }
+}
+```
+
+## Data Protection
+
+### Sensitive Data Handling
+
+- Never log sensitive data (PANs, CVVs, etc.)
+- Use tokenization for card data
+- Implement proper data masking
+- Follow PCI DSS requirements
+
+### Encryption in Transit
+
+- Always use HTTPS/TLS 1.2+
+- Implement proper certificate pinning
+- Use strong cipher suites
+- Monitor for security vulnerabilities
+
+## Best Practices
+
+### Error Handling
+
+<CodeGroup>
+
+```typescript TypeScript
+try {
+  const receipt = await builder.execute();
+} catch (error) {
+  // Log error details without sensitive data
+  console.error('Payout failed:', {
+    errorCode: error.code,
+    errorMessage: error.message,
+    timestamp: new Date().toISOString()
+    // Never log: PAN, CVV, or other sensitive data
+  });
+}
+```
+
+```python Python
+try:
+    receipt = await builder.execute()
+except Exception as error:
+    # Log error details without sensitive data
+    print('Payout failed:', {
+        'error_code': error.code,
+        'error_message': str(error),
+        'timestamp': datetime.now().isoformat()
+        # Never log: PAN, CVV, or other sensitive data
+    })
+```
+
+</CodeGroup>
+
+### Audit Logging
+
+Implement comprehensive audit logging:
+
+```typescript
+interface AuditLog {
+  timestamp: string;
+  userId: string;
+  action: string;
+  resource: string;
+  result: 'success' | 'failure';
+  errorCode?: string;
+  // Never include sensitive data
+}
+
+function logAuditEvent(event: AuditLog): void {
+  // Send to secure audit system
+  auditLogger.log(event);
+}
+```
+
+## Compliance
+
+### PCI DSS Requirements
+
+- Implement proper access controls
+- Use strong encryption
+- Maintain audit trails
+- Regular security assessments
+
+### Data Retention
+
+- Follow regulatory requirements
+- Implement data purging procedures
+- Maintain proper data classification
+- Regular compliance reviews
+
+## Monitoring & Alerting
+
+### Security Monitoring
+
+- Monitor for suspicious activity
+- Set up alerts for failed authentications
+- Track unusual transaction patterns
+- Implement fraud detection
+
+### Incident Response
+
+- Have a clear incident response plan
+- Document security procedures
+- Regular security training
+- Test incident response procedures
+
+## Testing Security
+
+### Security Testing
+
+```bash
+# Test mTLS connection
+openssl s_client -connect api.visa.com:443 -cert client.pem -key client.key
+
+# Validate certificate chain
+openssl verify -CAfile ca.pem client.pem
+```
+
+### Penetration Testing
+
+- Regular security assessments
+- Vulnerability scanning
+- Code security reviews
+- Third-party security audits
+
+

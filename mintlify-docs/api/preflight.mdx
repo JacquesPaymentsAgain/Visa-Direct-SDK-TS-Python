@@ -1,0 +1,339 @@
+---
+title: Preflight API
+icon: search
+api: 'POST /v1/preflight'
+---
+
+# Preflight API
+
+The Preflight API provides validation and verification services before executing payout transactions.
+
+## Overview
+
+Preflight services help validate recipient details and gather necessary information:
+
+- **Alias Resolution** - Convert aliases to card/account details
+- **Payment Account Validation (PAV)** - Verify account details
+- **Funds Transfer Attributes Inquiry (FTAI)** - Get transfer capabilities
+- **Payout Validation** - Validate payout parameters
+
+## Request Parameters
+
+<ParamField path="operation" type="string" required>
+The preflight operation to perform.
+
+**Options:**
+- `alias_resolution` - Resolve alias to recipient details
+- `pav_validation` - Validate payment account
+- `ftai_inquiry` - Get transfer attributes
+- `payout_validation` - Validate payout parameters
+</ParamField>
+
+<ParamField path="alias" type="object">
+Alias details for resolution operations.
+
+**Properties:**
+- `value` - The alias value (phone, email, etc.)
+- `type` - Type of alias: "MOBILE", "EMAIL", "CARD_TOKEN"
+</ParamField>
+
+<ParamField path="recipient" type="object">
+Recipient details for validation operations.
+
+**Properties:**
+- `type` - Recipient type: "card", "account", "wallet"
+- `pan` - Primary Account Number (for cards)
+- `accountNumber` - Bank account number (for accounts)
+- `bankCode` - Bank routing code
+</ParamField>
+
+<ParamField path="amount" type="object">
+Amount details for validation.
+
+**Properties:**
+- `currency` - Currency code
+- `valueMinor` - Amount in minor units
+</ParamField>
+
+<ParamField path="corridor" type="object">
+Transfer corridor details.
+
+**Properties:**
+- `srcCountry` - Source country code
+- `dstCountry` - Destination country code
+- `srcCurrency` - Source currency code
+- `dstCurrency` - Destination currency code
+</ParamField>
+
+<ParamField path="validateRecipient" type="(recipient: RecipientDetails) => Promise<ValidationResult>">
+Validates recipient details for payout.
+
+**Parameters:**
+- `recipient` - Recipient details to validate
+
+**Returns:** Promise resolving to validation result
+</ParamField>
+
+### QuotingService
+
+Manages FX quotes and currency conversion.
+
+<ParamField path="getQuote" type="(request: QuoteRequest) => Promise<Quote>">
+Gets an FX quote for currency conversion.
+
+**Parameters:**
+- `request.srcCurrency` - Source currency code
+- `request.dstCurrency` - Destination currency code
+- `request.amountMinor` - Amount in minor units
+
+**Returns:** Promise resolving to FX quote
+</ParamField>
+
+<ParamField path="lockQuote" type="(quoteId: string) => Promise<LockedQuote>">
+Locks an FX quote for use in a transaction.
+
+**Parameters:**
+- `quoteId` - Quote identifier to lock
+
+**Returns:** Promise resolving to locked quote
+</ParamField>
+
+### ComplianceService
+
+Handles compliance screening and regulatory checks.
+
+<ParamField path="screenTransaction" type="(data: ComplianceData) => Promise<ComplianceResult>">
+Screens a transaction for compliance requirements.
+
+**Parameters:**
+- `data.customerId` - Customer identifier
+- `data.transactionType` - Type of transaction
+- `data.amount` - Transaction amount
+- `data.riskLevel` - Risk assessment level
+
+**Returns:** Promise resolving to compliance result
+</ParamField>
+
+## Caching
+
+Preflight services include intelligent caching to improve performance:
+
+### TTL Cache
+- **Alias Resolution**: 24 hours
+- **PAV Results**: 1 hour
+- **FTAI Results**: 30 minutes
+- **Quote Data**: 5 minutes
+
+### Cache Keys
+```typescript
+// Alias resolution cache key
+const aliasKey = `alias:${aliasType}:${alias}`;
+
+// PAV cache key
+const pavKey = `pav:${accountNumber}:${bankCode}`;
+
+// FTAI cache key
+const ftaiKey = `ftai:${recipientId}:${currency}`;
+```
+
+## Usage Examples
+
+### Alias Resolution
+
+```typescript
+const recipientService = new RecipientService(httpClient);
+
+// Resolve mobile number to card details
+const resolution = await recipientService.resolveAlias(
+  '+447911123456',
+  'MOBILE'
+);
+
+console.log('Resolved to:', resolution.cardDetails);
+```
+
+### FX Quoting
+
+```typescript
+const quotingService = new QuotingService(httpClient);
+
+// Get FX quote
+const quote = await quotingService.getQuote({
+  srcCurrency: 'USD',
+  dstCurrency: 'GBP',
+  amountMinor: 10000
+});
+
+console.log('Exchange rate:', quote.rate);
+console.log('Quote expires:', quote.expiresAt);
+```
+
+### Compliance Screening
+
+```typescript
+const complianceService = new ComplianceService(httpClient);
+
+// Screen transaction
+const result = await complianceService.screenTransaction({
+  customerId: 'CUST_12345',
+  transactionType: 'P2P_PAYMENT',
+  amount: { currency: 'USD', valueMinor: 5000 },
+  riskLevel: 'LOW'
+});
+
+if (result.approved) {
+  console.log('Transaction approved');
+} else {
+  console.log('Transaction rejected:', result.reason);
+}
+```
+
+## Integration with Payouts
+
+Preflight services are automatically integrated with the payout flow:
+
+```typescript
+const receipt = await client.payouts.build()
+  .toCardViaAlias({
+    alias: '+447911123456',
+    aliasType: 'MOBILE'
+  })
+  .withFundingFromInternalAccount({
+    accountId: 'ACCOUNT_123',
+    confirmationRef: 'LEDGER_CONFIRM_456'
+  })
+  .withQuoteLock({
+    srcCurrency: 'USD',
+    dstCurrency: 'GBP',
+    amountMinor: 10000
+  })
+  .forAmount({
+    currency: 'GBP',
+    valueMinor: 10000
+  })
+  .execute();
+
+// Preflight services are called automatically:
+// 1. Alias resolution
+// 2. PAV validation
+// 3. FTAI inquiry
+// 4. FX quote locking
+// 5. Compliance screening
+```
+
+## Error Handling
+
+### Common Preflight Errors
+
+<ParamField path="AliasResolutionError" type="Error">
+Thrown when alias cannot be resolved to valid recipient details.
+</ParamField>
+
+<ParamField path="PAVValidationError" type="Error">
+Thrown when payment account validation fails.
+</ParamField>
+
+<ParamField path="QuoteExpiredError" type="Error">
+Thrown when FX quote has expired.
+</ParamField>
+
+<ParamField path="ComplianceRejectedError" type="Error">
+Thrown when compliance screening rejects the transaction.
+</ParamField>
+
+### Error Handling Example
+
+```typescript
+try {
+  const resolution = await recipientService.resolveAlias(
+    '+447911123456',
+    'MOBILE'
+  );
+} catch (error) {
+  if (error instanceof AliasResolutionError) {
+    console.log('Could not resolve alias');
+  } else if (error instanceof PAVValidationError) {
+    console.log('Account validation failed');
+  } else {
+    console.log('Unexpected error:', error.message);
+  }
+}
+```
+
+## Performance Optimization
+
+### Background Revalidation
+For cached results approaching TTL expiration, the SDK performs background revalidation:
+
+```typescript
+// Cache hit with background revalidation
+const resolution = await recipientService.resolveAlias(
+  '+447911123456',
+  'MOBILE'
+); // Returns cached result immediately
+
+// Background revalidation happens asynchronously
+// Fresh data will be available on next request
+```
+
+### Batch Operations
+Multiple preflight operations can be batched for efficiency:
+
+```typescript
+const batch = await Promise.all([
+  recipientService.resolveAlias('+447911123456', 'MOBILE'),
+  recipientService.resolveAlias('+447911123457', 'MOBILE'),
+  quotingService.getQuote({ srcCurrency: 'USD', dstCurrency: 'GBP', amountMinor: 10000 })
+]);
+
+console.log('Batch results:', batch);
+```
+
+## Monitoring
+
+### Metrics
+Preflight services expose metrics for monitoring:
+
+- **Cache hit rates** - Percentage of requests served from cache
+- **Resolution success rates** - Percentage of successful alias resolutions
+- **Validation success rates** - Percentage of successful validations
+- **Average response times** - Performance metrics
+
+### Telemetry Integration
+
+```typescript
+import { OpenTelemetry } from 'visa-direct-sdk';
+
+const telemetry = new OpenTelemetry({
+  serviceName: 'preflight-service',
+  version: '1.0.0'
+});
+
+// Metrics and traces are automatically collected
+const resolution = await recipientService.resolveAlias(
+  '+447911123456',
+  'MOBILE'
+);
+```
+
+## Best Practices
+
+### Caching Strategy
+- Use appropriate TTL values for different data types
+- Implement cache invalidation for critical updates
+- Monitor cache hit rates and adjust TTL accordingly
+
+### Error Handling
+- Implement retry logic for transient failures
+- Use circuit breakers for external service calls
+- Log all preflight failures for analysis
+
+### Performance
+- Use background revalidation to maintain fresh data
+- Batch multiple preflight operations when possible
+- Monitor and optimize response times
+
+### Security
+- Validate all input parameters
+- Use secure caching mechanisms
+- Implement proper access controls

@@ -1,0 +1,217 @@
+---
+title: API Overview
+icon: api
+---
+
+# API Overview
+
+The Visa Direct SDK provides a comprehensive API for building payment applications with Visa Direct capabilities.
+
+## Core Concepts
+
+### Orchestrator Pattern
+The SDK uses an orchestrator pattern to manage complex payment flows:
+
+- **PayoutOrchestrator** - Central engine for executing payouts
+- **Guards** - Security and validation layers
+- **Services** - Modular components for specific functionality
+
+### Builder Pattern
+A fluent API for constructing payment requests:
+
+```typescript
+await client.payouts.build()
+  .toCard({ pan: '4000000000000000' })
+  .withFundingFromInternalAccount({ accountId: '12345' })
+  .forAmount({ currency: 'USD', valueMinor: 5000 })
+  .execute();
+```
+
+## API Structure
+
+### Core Modules
+
+<CardGroup>
+<Card title="PayoutOrchestrator" icon="layers" href="/api/payouts">
+The central engine that executes payout transactions with built-in guards and validation.
+</Card>
+<Card title="PayoutBuilder" icon="hammer" href="/reference/typescript/builder">
+Fluent API for constructing payout requests with method chaining.
+</Card>
+<Card title="Services" icon="cog" href="/api/preflight">
+Modular services for preflight validation, quoting, and compliance.
+</Card>
+</CardGroup>
+
+### Security Layer
+
+<CardGroup>
+<Card title="Transport Security" icon="shield" href="/api/security">
+mTLS authentication and JWE encryption for secure communication.
+</Card>
+<Card title="Guards" icon="lock" href="/reference/typescript/orchestrator">
+Built-in guards for ledger confirmation and funding validation.
+</Card>
+<Card title="Idempotency" icon="repeat" href="/reference/typescript/storage">
+Saga-level idempotency to prevent duplicate transactions.
+</Card>
+</CardGroup>
+
+## Authentication
+
+### mTLS Configuration
+
+```typescript
+const client = new VisaDirectClient({
+  mTLS: {
+    cert: process.env.VISA_CERT_PATH,
+    key: process.env.VISA_KEY_PATH,
+    ca: process.env.VISA_CA_PATH
+  }
+});
+```
+
+### JWE Encryption
+
+```typescript
+const client = new VisaDirectClient({
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  }
+});
+```
+
+## Error Handling
+
+The SDK provides comprehensive error handling with specific error types:
+
+<CodeGroup>
+```typescript TypeScript
+import { 
+  LedgerNotConfirmedError,
+  ReceiptReusedError,
+  QuoteExpiredError,
+  ComplianceRejectedError
+} from 'visa-direct-sdk';
+
+try {
+  await client.payouts.build()...execute();
+} catch (error) {
+  if (error instanceof LedgerNotConfirmedError) {
+    // Handle ledger confirmation failure
+  } else if (error instanceof ReceiptReusedError) {
+    // Handle receipt reuse
+  }
+}
+```
+
+```python Python
+from visa_direct_sdk.errors import (
+    LedgerNotConfirmedError,
+    ReceiptReusedError,
+    QuoteExpiredError,
+    ComplianceRejectedError
+)
+
+try:
+    await client.payouts.build()...execute()
+except LedgerNotConfirmedError:
+    # Handle ledger confirmation failure
+except ReceiptReusedError:
+    # Handle receipt reuse
+```
+</CodeGroup>
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Visa Direct Configuration
+VISA_BASE_URL=https://sandbox.api.visa.com
+VISA_CERT_PATH=/path/to/cert.pem
+VISA_KEY_PATH=/path/to/key.pem
+VISA_CA_PATH=/path/to/ca.pem
+
+# JWE Configuration
+VISA_JWE_PUBLIC_KEY=your-public-key
+VISA_JWE_PRIVATE_KEY=your-private-key
+
+# Storage Configuration
+REDIS_URL=redis://localhost:6379
+DYNAMODB_TABLE_PREFIX=visa-direct
+```
+
+### Client Configuration
+
+<CodeGroup>
+```typescript TypeScript
+import { VisaDirectClient } from 'visa-direct-sdk';
+
+const client = new VisaDirectClient({
+  baseUrl: process.env.VISA_BASE_URL,
+  mTLS: {
+    cert: process.env.VISA_CERT_PATH,
+    key: process.env.VISA_KEY_PATH,
+    ca: process.env.VISA_CA_PATH
+  },
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  },
+  idempotencyStore: new RedisIdempotencyStore(redisClient),
+  receiptStore: new RedisReceiptStore(redisClient)
+});
+```
+
+```python Python
+from visa_direct_sdk import VisaDirectClient
+
+client = VisaDirectClient(
+    base_url=os.getenv('VISA_BASE_URL'),
+    mtls_cert_path=os.getenv('VISA_CERT_PATH'),
+    mtls_key_path=os.getenv('VISA_KEY_PATH'),
+    mtls_ca_path=os.getenv('VISA_CA_PATH'),
+    jwe_public_key=os.getenv('VISA_JWE_PUBLIC_KEY'),
+    jwe_private_key=os.getenv('VISA_JWE_PRIVATE_KEY'),
+    idempotency_store=RedisIdempotencyStore(redis_client),
+    receipt_store=RedisReceiptStore(redis_client)
+)
+```
+</CodeGroup>
+
+## Rate Limits
+
+The Visa Direct API has rate limits that vary by endpoint and environment:
+
+- **Sandbox**: 100 requests/minute
+- **Production**: Varies by agreement
+- **Burst**: Up to 10 requests/second
+
+## SDK Versions
+
+### TypeScript SDK
+- **Current**: 1.0.0
+- **Node.js**: 18+ required
+- **TypeScript**: 5.0+ required
+
+### Python SDK
+- **Current**: 1.0.0
+- **Python**: 3.9+ required
+- **Dependencies**: See [Installation Guide](/installation)
+
+## Support
+
+### Documentation
+- [Quickstart Guide](/quickstart)
+- [Installation Guide](/installation)
+- [SDK Reference](/reference/typescript/overview)
+
+### Community
+- [GitHub Repository](https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python)
+- [Issues & Discussions](https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python/discussions)
+
+### Professional Support
+- Contact Visa Direct support for production issues
+- Enterprise support available through Visa Direct program

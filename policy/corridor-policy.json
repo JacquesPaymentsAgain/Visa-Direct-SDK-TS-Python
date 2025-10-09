@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "corridors": [
+    {
+      "sourceCountry": "US",
+      "targetCountry": "US",
+      "currencies": { "source": "USD", "target": "USD" },
+      "rules": {
+        "fx": { "lockRequired": false },
+        "rails": { "allowedDestinations": ["card", "account", "wallet"] },
+        "limits": { "maxValueMinor": 100000, "dailyCountMax": 50 }
+      }
+    },
+    {
+      "sourceCountry": "GB",
+      "targetCountry": "GB", 
+      "currencies": { "source": "GBP", "target": "GBP" },
+      "rules": {
+        "fx": { "lockRequired": false },
+        "rails": { "allowedDestinations": ["card", "account"] },
+        "limits": { "maxValueMinor": 50000, "dailyCountMax": 25 }
+      }
+    },
+    {
+      "sourceCountry": "US",
+      "targetCountry": "MX",
+      "currencies": { "source": "USD", "target": "MXN" },
+      "rules": {
+        "fx": { "lockRequired": true },
+        "rails": { "allowedDestinations": ["card"] },
+        "limits": { "maxValueMinor": 100000, "dailyCountMax": 10 }
+      }
+    },
+    {
+      "sourceCountry": "CA",
+      "targetCountry": "CA",
+      "currencies": { "source": "CAD", "target": "CAD" },
+      "rules": {
+        "fx": { "lockRequired": false },
+        "rails": { "allowedDestinations": ["card", "account"] },
+        "limits": { "maxValueMinor": 75000, "dailyCountMax": 30 }
+      }
+    },
+    {
+      "sourceCountry": "AU",
+      "targetCountry": "AU",
+      "currencies": { "source": "AUD", "target": "AUD" },
+      "rules": {
+        "fx": { "lockRequired": false },
+        "rails": { "allowedDestinations": ["card", "account"] },
+        "limits": { "maxValueMinor": 60000, "dailyCountMax": 20 }
+      }
+    },
+    {
+      "sourceCountry": "GB",
+      "targetCountry": "PH",
+      "currencies": { "source": "GBP", "target": "PHP" },
+      "rules": {
+        "fx": { "lockRequired": true },
+        "rails": { "allowedDestinations": ["card", "account"] },
+        "limits": { "maxValueMinor": 25000, "dailyCountMax": 5 },
+        "compliance": { "scope": "all" }
+      }
+    }
+  ]
+}

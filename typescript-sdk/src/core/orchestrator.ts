@@ -5,7 +5,7 @@ import { InMemoryReceiptStore, ReceiptStore } from '../storage/receiptStore';
 import { LogEmitter, CompensationEventEmitter } from '../utils/events';
 import { RecipientService } from '../services/recipientService';
 import { QuotingService } from '../services/quotingService';
-import { ComplianceService } from '../services/complianceService';
+import { ComplianceService, ComplianceConfig } from '../services/complianceService';
 import { DestinationNotAllowedError, QuoteExpiredError, QuoteRequiredError } from '../types/errors';
 import { withSpan } from '../utils/otel';
 import { CorridorIdentifier, CorridorRules, Policy, getRules, loadPolicy } from '../policy/corridorPolicy';
@@ -53,6 +53,7 @@ export type OrchestratorOptions = {
 	recipientService?: RecipientService;
 	quotingService?: QuotingService;
 	complianceService?: ComplianceService;
+	complianceConfig?: ComplianceConfig;
 };
 
 export class Orchestrator {
@@ -65,15 +66,19 @@ export class Orchestrator {
 	private corridorPolicy?: Policy;
 
 	constructor(
-		private http: SecureHttpClient,
+		public httpClient: SecureHttpClient,
 		options: OrchestratorOptions = {}
 	) {
 		this.idempotencyStore = options.idempotencyStore ?? new InMemoryIdempotencyStore<any>();
 		this.receiptStore = options.receiptStore ?? new InMemoryReceiptStore();
 		this.events = options.events ?? new LogEmitter();
-		this.recipientService = options.recipientService ?? new RecipientService(http);
-		this.quotingService = options.quotingService ?? new QuotingService(http);
-		this.complianceService = options.complianceService ?? new ComplianceService(http);
+		this.recipientService = options.recipientService ?? new RecipientService(httpClient);
+		this.quotingService = options.quotingService ?? new QuotingService(httpClient);
+		this.complianceService = options.complianceService ?? new ComplianceService(httpClient, {
+			mode: 'cross-border-only',
+			enabled: true,
+			denyPath: '/compliance/v1/deny'
+		});
 	}
 
 	async payout(req: PayoutRequest): Promise<any> {
@@ -112,6 +117,33 @@ export class Orchestrator {
 				}
 			}, { attributes: { 'visa.funding.type': req.funding.type } });
 
+			// Compliance checks
+			await withSpan('orchestrator.compliance', async (complianceSpan) => {
+				const complianceResult = await this.complianceService.checkCompliance({
+					sourceCountry: req.preflight?.corridor?.sourceCountry || 'US',
+					targetCountry: req.preflight?.corridor?.targetCountry || 'US',
+					amount: req.amount.minor,
+					currency: req.amount.currency,
+					originatorId: req.originatorId,
+					recipientId: req.destination.type === 'CARD' ? req.destination.panToken : 
+								 req.destination.type === 'ACCOUNT' ? req.destination.accountId :
+								 req.destination.type === 'WALLET' ? req.destination.walletId : 'unknown',
+					correlationId: span?.spanContext().traceId
+				});
+
+				complianceSpan?.setAttributes({
+					'visa.compliance.allowed': complianceResult.allowed,
+					'visa.compliance.reason': complianceResult.reason || 'none',
+					'visa.compliance.id': complianceResult.complianceId || 'none'
+				});
+
+				if (!complianceResult.allowed) {
+					const error = new Error(`Compliance check failed: ${complianceResult.reason}`);
+					error.name = 'ComplianceDenied';
+					throw error;
+				}
+			}, { attributes: { 'visa.compliance.enabled': true } });
+
 			const { destination, fxQuoteId } = await this.runPreflight(req, span);
 
 			// Dispatch
@@ -123,7 +155,7 @@ export class Orchestrator {
 
 			const headers = { 'x-idempotency-key': req.idempotencyKey } as any;
 			try {
-				const { data } = await this.http.post(path, {
+				const { data } = await this.httpClient.post(path, {
 					originatorId: req.originatorId,
 					funding: req.funding,
 					destination,
@@ -174,9 +206,17 @@ export class Orchestrator {
 
 		if (req.preflight?.compliancePayload) {
 			await withSpan('orchestrator.preflight.compliance', async () => {
-				const result = await this.complianceService.screen(req.preflight!.compliancePayload);
-				if (!result?.approved) {
-					throw new Error('Compliance screening failed');
+				const result = await this.complianceService.checkCompliance({
+					sourceCountry: req.preflight?.corridor?.sourceCountry || 'US',
+					targetCountry: req.preflight?.corridor?.targetCountry || 'US',
+					amount: req.amount.minor,
+					currency: req.amount.currency,
+					originatorId: req.originatorId,
+					recipientId: 'preflight-check',
+					correlationId: undefined
+				});
+				if (!result.allowed) {
+					throw new Error(`Compliance screening failed: ${result.reason}`);
 				}
 			});
 		}

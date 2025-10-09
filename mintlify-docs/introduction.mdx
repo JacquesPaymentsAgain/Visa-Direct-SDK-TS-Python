@@ -3,16 +3,29 @@ title: Introduction
 description: 'Welcome to the Visa Direct SDK documentation'
 ---
 
+export const PreviewButton = ({ children, href }) => (
+  <a
+    href={href}
+    className="text-sm font-medium text-white dark:!text-zinc-950 bg-zinc-900 hover:bg-zinc-700 dark:bg-zinc-100 hover:dark:bg-zinc-300 rounded-full px-3.5 py-1.5 not-prose"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {children}
+  </a>
+);
+
 <img
   className="block dark:hidden"
-  src="/images/hero-light.svg"
-  alt="Hero Light"
+  src="/logo/light.svg"
+  alt="Visa Direct SDK Logo"
 />
 <img
   className="hidden dark:block"
-  src="/images/hero-dark.svg"
-  alt="Hero Dark"
+  src="/logo/dark.svg"
+  alt="Visa Direct SDK Logo"
 />
+
+
 
 ## What is Visa Direct SDK?
 

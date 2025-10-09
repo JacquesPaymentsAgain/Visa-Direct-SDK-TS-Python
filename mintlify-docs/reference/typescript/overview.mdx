@@ -56,18 +56,27 @@ const receipt = await PayoutBuilder.create(http)
 The TypeScript SDK provides full type safety for all operations:
 
 ```typescript
-import { PayoutBuilder, PayoutRequest } from 'visa-direct-sdk';
+import { Orchestrator, PayoutBuilder, PayoutRequest } from 'visa-direct-sdk';
 
-const builder = PayoutBuilder.create(http);
-const request: PayoutRequest = builder
-  .forOriginator('fi-001')
-  .withFundingInternal(true, 'LEDGER123')
-  .toCardDirect('tok_pan_411111******1111')
-  .forAmount('GBP', 5000)
-  .withIdempotencyKey('typed-request')
-  .build();
+const orchestrator = new Orchestrator(http);
+const request: PayoutRequest = {
+  originatorId: 'fi-001',
+  funding: {
+    type: 'INTERNAL',
+    debitConfirmed: true,
+    confirmationRef: 'LEDGER123'
+  },
+  destination: {
+    type: 'CARD',
+    panToken: 'tok_pan_411111******1111'
+  },
+  amount: {
+    currency: 'GBP',
+    minor: 5000
+  }
+};
 
-const receipt = await builder.execute();
+const receipt = await orchestrator.payout(request);
 ```
 
 ## Error Handling
@@ -75,8 +84,12 @@ const receipt = await builder.execute();
 Comprehensive error handling with typed exceptions:
 
 ```typescript
+import { PayoutBuilder, LedgerNotConfirmed, AFTDeclined, ReceiptReused } from 'visa-direct-sdk';
+
+const builder = PayoutBuilder.create(http);
+
 try {
-  const receipt = await client.payouts.build().execute();
+  const receipt = await builder.withIdempotencyKey('error-demo').execute();
 } catch (error) {
   if (error instanceof LedgerNotConfirmed) {
     // Handle ledger confirmation failure

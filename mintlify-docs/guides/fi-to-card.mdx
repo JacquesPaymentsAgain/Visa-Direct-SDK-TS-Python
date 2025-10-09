@@ -1,0 +1,215 @@
+---
+title: FI to Card (OCT) Guide
+icon: credit-card
+---
+
+# FI to Card (OCT) Guide
+
+This guide shows you how to send money from a Financial Institution (FI) to a card using the Visa Direct OCT (Original Credit Transaction) capability.
+
+## Overview
+
+OCT allows you to send funds directly to a Visa card from your financial institution. This is perfect for:
+- Salary payments
+- Refunds
+- Payouts
+- Cash advances
+
+## Prerequisites
+
+- Valid Visa Direct credentials
+- mTLS certificates configured
+- JWE keys for sensitive endpoints
+
+## Step-by-Step Implementation
+
+### 1. Install the SDK
+
+<CodeGroup>
+```bash TypeScript
+npm install visa-direct-sdk
+```
+
+```bash Python
+pip install visa-direct-sdk
+```
+</CodeGroup>
+
+### 2. Configure Your Client
+
+<CodeGroup>
+```typescript TypeScript
+import { VisaDirectClient } from 'visa-direct-sdk';
+
+const client = new VisaDirectClient({
+  baseUrl: 'https://sandbox.api.visa.com',
+  mTLS: {
+    cert: process.env.VISA_CERT_PATH,
+    key: process.env.VISA_KEY_PATH,
+    ca: process.env.VISA_CA_PATH
+  },
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  }
+});
+```
+
+```python Python
+from visa_direct_sdk import VisaDirectClient
+
+client = VisaDirectClient(
+    base_url='https://sandbox.api.visa.com',
+    mtls_cert_path=os.getenv('VISA_CERT_PATH'),
+    mtls_key_path=os.getenv('VISA_KEY_PATH'),
+    mtls_ca_path=os.getenv('VISA_CA_PATH'),
+    jwe_public_key=os.getenv('VISA_JWE_PUBLIC_KEY'),
+    jwe_private_key=os.getenv('VISA_JWE_PRIVATE_KEY')
+)
+```
+</CodeGroup>
+
+### 3. Execute OCT Transaction
+
+<CodeGroup>
+```typescript TypeScript
+async function sendToCard() {
+  try {
+    const receipt = await client.payouts.build()
+      .toCard({ 
+        pan: '4000000000000000',
+        expiryDate: '1225'
+      })
+      .withFundingFromInternalAccount({
+        accountId: 'FI_ACCOUNT_123',
+        confirmationRef: 'LEDGER_CONFIRM_456'
+      })
+      .forAmount({
+        currency: 'USD',
+        valueMinor: 5000 // $50.00
+      })
+      .execute();
+
+    console.log('OCT successful:', receipt);
+    return receipt;
+  } catch (error) {
+    console.error('OCT failed:', error);
+    throw error;
+  }
+}
+```
+
+```python Python
+async def send_to_card():
+    try:
+        receipt = await client.payouts.build() \
+            .to_card(pan='4000000000000000', expiry_date='1225') \
+            .with_funding_from_internal_account(
+                account_id='FI_ACCOUNT_123',
+                confirmation_ref='LEDGER_CONFIRM_456'
+            ) \
+            .for_amount(currency='USD', value_minor=5000) \
+            .execute()
+
+        print('OCT successful:', receipt)
+        return receipt
+    except Exception as error:
+        print('OCT failed:', error)
+        raise error
+```
+</CodeGroup>
+
+## Error Handling
+
+The SDK provides specific error types for OCT transactions:
+
+<CodeGroup>
+```typescript TypeScript
+import { 
+  LedgerNotConfirmedError, 
+  CardValidationError,
+  InsufficientFundsError 
+} from 'visa-direct-sdk';
+
+try {
+  await sendToCard();
+} catch (error) {
+  if (error instanceof LedgerNotConfirmedError) {
+    // Handle ledger confirmation failure
+    console.log('Ledger not confirmed:', error.message);
+  } else if (error instanceof CardValidationError) {
+    // Handle invalid card details
+    console.log('Card validation failed:', error.message);
+  } else if (error instanceof InsufficientFundsError) {
+    // Handle insufficient funds
+    console.log('Insufficient funds:', error.message);
+  }
+}
+```
+
+```python Python
+from visa_direct_sdk.errors import (
+    LedgerNotConfirmedError,
+    CardValidationError,
+    InsufficientFundsError
+)
+
+try:
+    await send_to_card()
+except LedgerNotConfirmedError as e:
+    print('Ledger not confirmed:', str(e))
+except CardValidationError as e:
+    print('Card validation failed:', str(e))
+except InsufficientFundsError as e:
+    print('Insufficient funds:', str(e))
+```
+</CodeGroup>
+
+## Best Practices
+
+### Security
+- Always use mTLS for authentication
+- Enable JWE encryption for sensitive data
+- Validate card details before sending
+
+### Performance
+- Use idempotency keys for retry scenarios
+- Implement proper error handling and retries
+- Monitor transaction status
+
+### Compliance
+- Follow PCI DSS requirements
+- Implement proper audit logging
+- Use preflight validation when available
+
+## Testing
+
+Use the local simulator for development:
+
+```bash
+npm run dev:simulator
+```
+
+Then update your client configuration:
+
+<CodeGroup>
+```typescript TypeScript
+const client = new VisaDirectClient({
+  baseUrl: 'http://127.0.0.1:8766', // Simulator URL
+  // ... other config
+});
+```
+
+```python Python
+client = VisaDirectClient(
+    base_url='http://127.0.0.1:8766',  # Simulator URL
+    # ... other config
+)
+```
+</CodeGroup>
+
+## Next Steps
+
+- Learn about [Fintech AFT Payouts](/guides/fintech-aft)
+- Explore [API Reference](/api/payouts)
+- Check out [Security Best Practices](/api/security)

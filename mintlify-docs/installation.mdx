@@ -26,7 +26,7 @@ pip install visa-direct-sdk
 <CodeGroup>
 
 ```typescript TypeScript
-import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+import { SecureHttpClient, Orchestrator, PayoutBuilder } from 'visa-direct-sdk';
 
 const http = new SecureHttpClient({
   baseUrl: process.env.VISA_BASE_URL ?? 'https://sandbox.api.visa.com',
@@ -38,8 +38,6 @@ const http = new SecureHttpClient({
 
 const orchestrator = new Orchestrator(http);
 const builder = PayoutBuilder.create(http);
-
-// Add Visa API signature headers using your own Axios interceptor if needed
 ```
 
 ```python Python
@@ -57,8 +55,7 @@ http = SecureHttpClient(
 
 orchestrator = Orchestrator(http)
 builder = PayoutBuilder.create(http)
-
-# Use requests/adapters middleware to add Visa signature headers as required
+http.session.headers.update({'x-api-key': os.getenv('VISA_API_KEY', '')})
 ```
 
 </CodeGroup>

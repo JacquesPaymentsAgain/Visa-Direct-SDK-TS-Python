@@ -27,7 +27,20 @@
     "install:all": "npm install && cd typescript-sdk && npm install && cd ../visa-direct-surface && npm install",
     "clean": "rm -rf node_modules typescript-sdk/node_modules visa-direct-surface/node_modules python-sdk/.venv",
     "start": "npm run dev",
-    "deploy:docs": "cd mintlify-docs && mintlify deploy"
+    "deploy:docs": "cd mintlify-docs && mintlify deploy",
+    "live:ts": "bash -lc 'source .env.current && cd typescript-sdk && npm run build && node dist/examples/live_sandbox_fi_to_card.js'",
+    "live:py": "bash -lc 'source .env.current && cd python-sdk && python examples/live_sandbox_fi_to_card.py'",
+    "live:test": "npm run live:ts && npm run live:py",
+    "setup:live": "./setup_live_sandbox.sh",
+    "pilot:gb-ph": "./run_gb_ph_pilot.sh",
+    "pilot:ts": "bash -lc 'source .env.current && cd typescript-sdk && npm run build && node dist/examples/universal_pilot.js'",
+    "pilot:py": "bash -lc 'source .env.current && cd python-sdk && python examples/gb_ph_pilot.py'",
+    "pilot:domestic": "bash -lc 'source .env.current && cd typescript-sdk && npm run build && node dist/examples/gb_domestic_pilot.js'",
+    "pilot:crossborder": "bash -lc 'source .env.current && cd typescript-sdk && npm run build && node dist/examples/gb_ph_pilot.js'",
+    "test:comprehensive": "./run_comprehensive_tests.sh",
+    "env:simulator": "./configure_environment.sh simulator",
+    "env:live": "./configure_environment.sh live",
+    "env:status": "./configure_environment.sh status"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

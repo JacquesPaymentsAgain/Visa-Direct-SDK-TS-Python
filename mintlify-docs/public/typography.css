@@ -1,0 +1,152 @@
+/* Unified Typography System for Mintlify Documentation */
+
+/* Import Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Typography - Unified Font System */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  
+  /* Typography Scale - Consistent across all apps */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  
+  /* Line Heights - Optimized for Inter */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+}
+
+/* Override Mintlify's default fonts */
+body, .mintlify-docs {
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-base) !important;
+  line-height: var(--leading-normal) !important;
+}
+
+/* Sidebar Typography - Consistent with Dashboard */
+.mintlify-docs .sidebar,
+.mintlify-docs .sidebar * {
+  font-family: var(--font-sans) !important;
+}
+
+.mintlify-docs .sidebar .sidebar-item,
+.mintlify-docs .sidebar .sidebar-link {
+  font-size: var(--text-sm) !important;
+  line-height: var(--leading-snug) !important;
+  font-weight: 500 !important;
+}
+
+.mintlify-docs .sidebar .sidebar-group-label,
+.mintlify-docs .sidebar .sidebar-section-label {
+  font-size: var(--text-xs) !important;
+  line-height: var(--leading-tight) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Content Typography - Consistent body text */
+.mintlify-docs .content,
+.mintlify-docs .content * {
+  font-family: var(--font-sans) !important;
+}
+
+.mintlify-docs .content p,
+.mintlify-docs .content li {
+  font-size: var(--text-base) !important;
+  line-height: var(--leading-relaxed) !important;
+}
+
+.mintlify-docs .content h1 {
+  font-size: var(--text-3xl) !important;
+  line-height: var(--leading-tight) !important;
+  font-weight: 700 !important;
+}
+
+.mintlify-docs .content h2 {
+  font-size: var(--text-2xl) !important;
+  line-height: var(--leading-tight) !important;
+  font-weight: 600 !important;
+}
+
+.mintlify-docs .content h3 {
+  font-size: var(--text-xl) !important;
+  line-height: var(--leading-tight) !important;
+  font-weight: 600 !important;
+}
+
+.mintlify-docs .content h4 {
+  font-size: var(--text-lg) !important;
+  line-height: var(--leading-tight) !important;
+  font-weight: 600 !important;
+}
+
+/* Code Typography - Consistent mono font */
+.mintlify-docs code,
+.mintlify-docs pre,
+.mintlify-docs .code-block,
+.mintlify-docs .code-snippet {
+  font-family: var(--font-mono) !important;
+  font-size: var(--text-sm) !important;
+  line-height: var(--leading-normal) !important;
+}
+
+/* Navigation Typography */
+.mintlify-docs .navbar,
+.mintlify-docs .navbar * {
+  font-family: var(--font-sans) !important;
+}
+
+.mintlify-docs .navbar .navbar-link {
+  font-size: var(--text-sm) !important;
+  font-weight: 500 !important;
+}
+
+/* Table Typography */
+.mintlify-docs .table,
+.mintlify-docs .table * {
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-sm) !important;
+  line-height: var(--leading-normal) !important;
+}
+
+/* Button Typography */
+.mintlify-docs .button,
+.mintlify-docs .btn {
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 500 !important;
+}
+
+/* Search Typography */
+.mintlify-docs .search,
+.mintlify-docs .search * {
+  font-family: var(--font-sans) !important;
+}
+
+/* Mobile Responsive Typography */
+@media (max-width: 768px) {
+  .mintlify-docs .sidebar .sidebar-item,
+  .mintlify-docs .sidebar .sidebar-link {
+    font-size: var(--text-base) !important;
+  }
+  
+  .mintlify-docs .content h1 {
+    font-size: var(--text-2xl) !important;
+  }
+  
+  .mintlify-docs .content h2 {
+    font-size: var(--text-xl) !important;
+  }
+}

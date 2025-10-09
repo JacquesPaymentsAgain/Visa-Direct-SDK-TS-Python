@@ -1,0 +1,409 @@
+---
+title: 'Testing Guide'
+description: 'Comprehensive testing strategies and tools for Visa Direct SDK development'
+icon: flask
+keywords: ['testing', 'unit tests', 'integration tests', 'simulator', 'mock', 'test data']
+---
+
+# Testing Guide
+
+This guide covers testing strategies, tools, and best practices for the Visa Direct SDK.
+
+## Testing Environment Setup
+
+### Local Simulator
+
+The Visa Direct SDK includes a local Flask simulator for development and testing:
+
+```bash
+# Start the simulator
+cd simulator
+python app.py
+```
+
+The simulator provides:
+- Realistic API responses
+- Error simulation capabilities
+- Test data generation
+- Performance testing support
+
+### Environment Configuration
+
+<CodeGroup>
+
+```typescript TypeScript
+// Test configuration
+const testConfig = {
+  baseUrl: 'http://127.0.0.1:8766',
+  certPath: './test-certs/client.pem',
+  keyPath: './test-certs/client.key',
+  caPath: './test-certs/ca.pem'
+};
+
+// Production configuration
+const prodConfig = {
+  baseUrl: 'https://api.visa.com',
+  certPath: process.env.VISA_CERT_PATH,
+  keyPath: process.env.VISA_KEY_PATH,
+  caPath: process.env.VISA_CA_PATH
+};
+```
+
+```python Python
+# Test configuration
+test_config = {
+    'base_url': 'http://127.0.0.1:8766',
+    'cert_path': './test-certs/client.pem',
+    'key_path': './test-certs/client.key',
+    'ca_path': './test-certs/ca.pem'
+}
+
+# Production configuration
+prod_config = {
+    'base_url': 'https://api.visa.com',
+    'cert_path': os.getenv('VISA_CERT_PATH'),
+    'key_path': os.getenv('VISA_KEY_PATH'),
+    'ca_path': os.getenv('VISA_CA_PATH')
+}
+```
+
+</CodeGroup>
+
+## Unit Testing
+
+### TypeScript Unit Tests
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+describe('PayoutBuilder', () => {
+  let builder: PayoutBuilder;
+  let mockHttp: jest.Mocked<SecureHttpClient>;
+
+  beforeEach(() => {
+    mockHttp = {
+      post: jest.fn(),
+      get: jest.fn()
+    } as any;
+    
+    builder = PayoutBuilder.create(mockHttp);
+  });
+
+  it('should build payout request correctly', async () => {
+    const mockResponse = {
+      payoutId: 'test-123',
+      status: 'executed',
+      amount: { currency: 'USD', minor: 1000 }
+    };
+
+    mockHttp.post.mockResolvedValue(mockResponse);
+
+    const receipt = await builder
+      .forOriginator('fi-001')
+      .withFundingInternal(true, 'LEDGER_123')
+      .toCardViaAlias({ alias: '+1234567890', aliasType: 'MOBILE' })
+      .forAmount('USD', 1000)
+      .withIdempotencyKey('test-key')
+      .execute();
+
+    expect(receipt).toEqual(mockResponse);
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/visadirect/fundstransfer/v1/pushfunds',
+      expect.objectContaining({
+        originatorId: 'fi-001',
+        funding: expect.objectContaining({
+          type: 'INTERNAL',
+          debitConfirmed: true,
+          confirmationRef: 'LEDGER_123'
+        })
+      })
+    );
+  });
+});
+```
+
+### Python Unit Tests
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+from visa_direct_sdk.dx.builder import PayoutBuilder
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+
+class TestPayoutBuilder:
+    def setup_method(self):
+        self.mock_http = Mock(spec=SecureHttpClient)
+        self.builder = PayoutBuilder.create(self.mock_http)
+
+    def test_build_payout_request(self):
+        mock_response = {
+            'payoutId': 'test-123',
+            'status': 'executed',
+            'amount': {'currency': 'USD', 'minor': 1000}
+        }
+        
+        self.mock_http.post.return_value = mock_response
+
+        receipt = self.builder \
+            .for_originator('fi-001') \
+            .with_funding_internal(True, 'LEDGER_123') \
+            .to_card_via_alias('+1234567890', 'MOBILE') \
+            .for_amount('USD', 1000) \
+            .with_idempotency_key('test-key') \
+            .execute()
+
+        assert receipt == mock_response
+        self.mock_http.post.assert_called_once()
+```
+
+## Integration Testing
+
+### End-to-End Testing
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+describe('Integration Tests', () => {
+  let client: SecureHttpClient;
+  let builder: PayoutBuilder;
+
+  beforeAll(async () => {
+    client = new SecureHttpClient({
+      baseUrl: 'http://127.0.0.1:8766',
+      certPath: './test-certs/client.pem',
+      keyPath: './test-certs/client.key',
+      caPath: './test-certs/ca.pem'
+    });
+    
+    builder = PayoutBuilder.create(client);
+  });
+
+  it('should execute complete payout flow', async () => {
+    const receipt = await builder
+      .forOriginator('fi-001')
+      .withFundingInternal(true, 'LEDGER_123')
+      .toCardViaAlias({ alias: '+1234567890', aliasType: 'MOBILE' })
+      .forAmount('USD', 1000)
+      .withIdempotencyKey('integration-test')
+      .execute();
+
+    expect(receipt).toHaveProperty('payoutId');
+    expect(receipt).toHaveProperty('status');
+    expect(receipt.status).toBe('executed');
+  });
+});
+```
+
+### Error Scenario Testing
+
+```typescript
+describe('Error Handling', () => {
+  it('should handle insufficient funds error', async () => {
+    const builder = PayoutBuilder.create(client);
+    
+    await expect(
+      builder
+        .forOriginator('fi-001')
+        .withFundingInternal(false, 'INVALID_LEDGER')
+        .toCardViaAlias({ alias: '+1234567890', aliasType: 'MOBILE' })
+        .forAmount('USD', 1000000) // Large amount
+        .withIdempotencyKey('error-test')
+        .execute()
+    ).rejects.toThrow('Insufficient funds');
+  });
+});
+```
+
+## Test Data Management
+
+### Test Data Generation
+
+```typescript
+class TestDataGenerator {
+  static generateCardAlias(): { alias: string; aliasType: string } {
+    return {
+      alias: `+1${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+      aliasType: 'MOBILE'
+    };
+  }
+
+  static generateAmount(currency: string = 'USD'): { currency: string; minor: number } {
+    return {
+      currency,
+      minor: Math.floor(Math.random() * 10000) + 100 // $1.00 to $100.00
+    };
+  }
+
+  static generateIdempotencyKey(): string {
+    return `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+```
+
+### Mock Data
+
+```typescript
+const mockResponses = {
+  aliasResolve: {
+    alias: '+1234567890',
+    aliasType: 'MOBILE',
+    credentialType: 'CARD',
+    panToken: 'token-123'
+  },
+  payoutSuccess: {
+    payoutId: 'payout-123',
+    status: 'executed',
+    amount: { currency: 'USD', minor: 1000 },
+    created: '2024-01-01T00:00:00Z'
+  }
+};
+```
+
+## Performance Testing
+
+### Load Testing
+
+```typescript
+import { performance } from 'perf_hooks';
+
+describe('Performance Tests', () => {
+  it('should handle concurrent requests', async () => {
+    const promises = Array.from({ length: 10 }, (_, i) => 
+      builder
+        .forOriginator('fi-001')
+        .withFundingInternal(true, `LEDGER_${i}`)
+        .toCardViaAlias({ alias: `+123456789${i}`, aliasType: 'MOBILE' })
+        .forAmount('USD', 1000)
+        .withIdempotencyKey(`perf-test-${i}`)
+        .execute()
+    );
+
+    const start = performance.now();
+    const results = await Promise.all(promises);
+    const end = performance.now();
+
+    expect(results).toHaveLength(10);
+    expect(end - start).toBeLessThan(5000); // Should complete within 5 seconds
+  });
+});
+```
+
+## Test Automation
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/test.yml
+name: Test Suite
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Start simulator
+        run: |
+          cd simulator
+          python -m pip install -r requirements.txt
+          python app.py &
+          sleep 5
+          
+      - name: Run tests
+        run: npm test
+        
+      - name: Run integration tests
+        run: npm run test:integration
+```
+
+### Test Scripts
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch"
+  }
+}
+```
+
+## Best Practices
+
+### Test Organization
+
+- Separate unit tests from integration tests
+- Use descriptive test names
+- Group related tests in describe blocks
+- Keep tests independent and isolated
+
+### Test Data
+
+- Use realistic test data
+- Avoid hardcoded values
+- Implement data cleanup
+- Use factories for complex objects
+
+### Error Testing
+
+- Test all error scenarios
+- Verify error messages and codes
+- Test retry logic
+- Validate error handling
+
+## Debugging Tests
+
+### Debug Configuration
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    environment: 'node',
+    setupFiles: ['./test/setup.ts'],
+    testTimeout: 10000,
+    hookTimeout: 10000
+  }
+});
+```
+
+### Test Debugging
+
+```typescript
+describe('Debug Tests', () => {
+  it('should debug payout flow', async () => {
+    console.log('Starting payout test...');
+    
+    const builder = PayoutBuilder.create(client);
+    console.log('Builder created');
+    
+    const receipt = await builder
+      .forOriginator('fi-001')
+      .withFundingInternal(true, 'LEDGER_123')
+      .toCardViaAlias({ alias: '+1234567890', aliasType: 'MOBILE' })
+      .forAmount('USD', 1000)
+      .withIdempotencyKey('debug-test')
+      .execute();
+      
+    console.log('Payout completed:', receipt);
+    expect(receipt).toBeDefined();
+  });
+});
+```
+
+

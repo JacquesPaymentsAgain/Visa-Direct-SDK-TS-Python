@@ -1,0 +1,353 @@
+---
+title: Payouts API
+icon: credit-card
+api: 'POST /v1/payouts'
+---
+
+# Payouts API
+
+The Payouts API provides comprehensive functionality for sending money through Visa Direct.
+
+## Overview
+
+The Payouts API supports multiple funding sources and destination types:
+
+- **Funding Sources**: Internal accounts, AFT receipts, PIS receipts
+- **Destinations**: Cards, accounts, wallets
+- **Features**: Preflight validation, FX quoting, compliance screening
+
+## Request Parameters
+
+<ParamField path="destination" type="object" required>
+The destination details for the payout.
+
+**Properties:**
+- `type` - Destination type: "card", "account", "wallet"
+- `pan` - Primary Account Number (for cards)
+- `expiryDate` - Card expiry date in MMYY format
+- `accountNumber` - Bank account number (for accounts)
+- `bankCode` - Bank routing code
+</ParamField>
+
+<ParamField path="funding" type="object" required>
+The funding source details.
+
+**Properties:**
+- `type` - Funding type: "internal", "aft", "pis"
+- `accountId` - Source account identifier
+- `confirmationRef` - Ledger confirmation reference (for internal)
+- `receiptId` - AFT/PIS receipt identifier
+</ParamField>
+
+<ParamField path="amount" type="object" required>
+The payout amount details.
+
+**Properties:**
+- `currency` - Currency code (e.g., "USD", "GBP")
+- `valueMinor` - Amount in minor units (e.g., 5000 for $50.00)
+</ParamField>
+
+<ParamField path="idempotencyKey" type="string" required>
+Unique key for idempotency to prevent duplicate transactions.
+</ParamField>
+
+<ParamField path="quote" type="object">
+Optional FX quote details for currency conversion.
+
+**Properties:**
+- `srcCurrency` - Source currency code
+- `dstCurrency` - Destination currency code
+- `rate` - Exchange rate
+- `expiresAt` - Quote expiration timestamp
+</ParamField>
+
+<ParamField path="compliance" type="object">
+Optional compliance screening data.
+
+**Properties:**
+- `customerId` - Customer identifier
+- `transactionType` - Type of transaction
+- `riskLevel` - Risk assessment level
+</ParamField>
+
+### Guards
+
+The orchestrator includes built-in guards for security and validation:
+
+#### LedgerGuard
+Validates that the source account has sufficient funds and confirms the debit.
+
+```typescript
+// Automatically applied for internal account funding
+const receipt = await orchestrator.payout(request, idempotencyKey);
+```
+
+#### FundingGuard
+Ensures AFT/PIS receipts are single-use and valid.
+
+```typescript
+// Automatically applied for AFT/PIS funding
+const receipt = await orchestrator.payout(request, idempotencyKey);
+```
+
+## PayoutBuilder
+
+Fluent API for constructing payout requests.
+
+### Basic Usage
+
+```typescript
+const receipt = await client.payouts.build()
+  .toCard({ pan: '4000000000000000' })
+  .withFundingFromInternalAccount({
+    accountId: 'ACCOUNT_123',
+    confirmationRef: 'LEDGER_CONFIRM_456'
+  })
+  .forAmount({
+    currency: 'USD',
+    valueMinor: 5000
+  })
+  .execute();
+```
+
+### Destination Methods
+
+<ParamField path="toCard" type="(card: CardDetails) => PayoutBuilder">
+Configure payout to a Visa card.
+
+**Parameters:**
+- `card.pan` - Primary Account Number
+- `card.expiryDate` - Card expiry (MMYY)
+- `card.cvv` - Card verification value (optional)
+</ParamField>
+
+<ParamField path="toCardViaAlias" type="(alias: AliasDetails) => PayoutBuilder">
+Configure payout to a card using alias resolution.
+
+**Parameters:**
+- `alias.alias` - Alias value (phone, email, etc.)
+- `alias.aliasType` - Type of alias (MOBILE, EMAIL, etc.)
+</ParamField>
+
+<ParamField path="toAccount" type="(account: AccountDetails) => PayoutBuilder">
+Configure payout to a bank account.
+
+**Parameters:**
+- `account.accountNumber` - Account number
+- `account.accountType` - Account type (CHECKING, SAVINGS)
+- `account.bankCode` - Bank routing code
+</ParamField>
+
+### Funding Methods
+
+<ParamField path="withFundingFromInternalAccount" type="(funding: InternalFunding) => PayoutBuilder">
+Configure funding from an internal account.
+
+**Parameters:**
+- `funding.accountId` - Internal account identifier
+- `funding.confirmationRef` - Ledger confirmation reference
+</ParamField>
+
+<ParamField path="withFundingFromAFT" type="(funding: AFTFunding) => PayoutBuilder">
+Configure funding from an AFT receipt.
+
+**Parameters:**
+- `funding.accountId` - Source account identifier
+- `funding.receiptId` - AFT receipt identifier
+</ParamField>
+
+<ParamField path="withFundingFromPIS" type="(funding: PISFunding) => PayoutBuilder">
+Configure funding from a PIS receipt.
+
+**Parameters:**
+- `funding.accountId` - Source account identifier
+- `funding.receiptId` - PIS receipt identifier
+</ParamField>
+
+### Enhancement Methods
+
+<ParamField path="withQuoteLock" type="(quote: QuoteLock) => PayoutBuilder">
+Lock an FX quote for the transaction.
+
+**Parameters:**
+- `quote.srcCurrency` - Source currency code
+- `quote.dstCurrency` - Destination currency code
+- `quote.amountMinor` - Amount in minor units
+</ParamField>
+
+<ParamField path="withCompliance" type="(compliance: ComplianceData) => PayoutBuilder">
+Add compliance screening data.
+
+**Parameters:**
+- `compliance.customerId` - Customer identifier
+- `compliance.transactionType` - Type of transaction
+- `compliance.riskLevel` - Risk assessment level
+</ParamField>
+
+## Request Types
+
+### PayoutRequest
+
+```typescript
+interface PayoutRequest {
+  destination: DestinationDetails;
+  funding: FundingDetails;
+  amount: AmountDetails;
+  quote?: QuoteDetails;
+  compliance?: ComplianceDetails;
+  metadata?: Record<string, any>;
+}
+```
+
+### PayoutReceipt
+
+```typescript
+interface PayoutReceipt {
+  transactionId: string;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING';
+  amount: AmountDetails;
+  fees?: FeeDetails[];
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+```
+
+## Error Handling
+
+### Common Errors
+
+<ParamField path="LedgerNotConfirmedError" type="Error">
+Thrown when ledger confirmation fails or account has insufficient funds.
+</ParamField>
+
+<ParamField path="ReceiptReusedError" type="Error">
+Thrown when attempting to reuse an AFT or PIS receipt.
+</ParamField>
+
+<ParamField path="QuoteExpiredError" type="Error">
+Thrown when an FX quote has expired.
+</ParamField>
+
+<ParamField path="ComplianceRejectedError" type="Error">
+Thrown when compliance screening rejects the transaction.
+</ParamField>
+
+### Error Handling Example
+
+```typescript
+try {
+  const receipt = await client.payouts.build()
+    .toCard({ pan: '4000000000000000' })
+    .withFundingFromInternalAccount({
+      accountId: 'ACCOUNT_123',
+      confirmationRef: 'LEDGER_CONFIRM_456'
+    })
+    .forAmount({
+      currency: 'USD',
+      valueMinor: 5000
+    })
+    .execute();
+
+  console.log('Payout successful:', receipt);
+} catch (error) {
+  if (error instanceof LedgerNotConfirmedError) {
+    console.log('Ledger confirmation failed');
+  } else if (error instanceof ReceiptReusedError) {
+    console.log('Receipt already used');
+  } else {
+    console.log('Unexpected error:', error.message);
+  }
+}
+```
+
+## Examples
+
+### Card Payout
+
+```typescript
+const receipt = await client.payouts.build()
+  .toCard({
+    pan: '4000000000000000',
+    expiryDate: '1225'
+  })
+  .withFundingFromInternalAccount({
+    accountId: 'FI_ACCOUNT_123',
+    confirmationRef: 'LEDGER_CONFIRM_456'
+  })
+  .forAmount({
+    currency: 'USD',
+    valueMinor: 5000 // $50.00
+  })
+  .execute();
+```
+
+### Account Payout with FX
+
+```typescript
+const receipt = await client.payouts.build()
+  .toAccount({
+    accountNumber: 'GB29NWBK60161331926819',
+    accountType: 'CHECKING',
+    bankCode: 'NWBK'
+  })
+  .withFundingFromAFT({
+    accountId: 'FINTRECH_ACCOUNT_789',
+    receiptId: 'AFT_RECEIPT_123'
+  })
+  .withQuoteLock({
+    srcCurrency: 'USD',
+    dstCurrency: 'GBP',
+    amountMinor: 10000
+  })
+  .forAmount({
+    currency: 'GBP',
+    valueMinor: 10000 // £100.00
+  })
+  .execute();
+```
+
+### Mobile Payout with Compliance
+
+```typescript
+const receipt = await client.payouts.build()
+  .toCardViaAlias({
+    alias: '+447911123456',
+    aliasType: 'MOBILE'
+  })
+  .withFundingFromPIS({
+    accountId: 'CUSTOMER_ACCOUNT_456',
+    receiptId: 'PIS_RECEIPT_789'
+  })
+  .withCompliance({
+    customerId: 'CUST_12345',
+    transactionType: 'P2P_PAYMENT',
+    riskLevel: 'LOW'
+  })
+  .forAmount({
+    currency: 'GBP',
+    valueMinor: 2500 // £25.00
+  })
+  .execute();
+```
+
+## Best Practices
+
+### Idempotency
+Always use unique idempotency keys to prevent duplicate transactions:
+
+```typescript
+const idempotencyKey = `payout_${Date.now()}_${Math.random()}`;
+const receipt = await client.payouts.build()...execute(idempotencyKey);
+```
+
+### Error Handling
+Implement comprehensive error handling for all possible failure scenarios.
+
+### Monitoring
+Use the built-in telemetry to monitor payout success rates and performance.
+
+### Security
+- Always use mTLS for authentication
+- Enable JWE encryption for sensitive data
+- Validate all input parameters
+- Implement proper audit logging

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Visa Direct SDK",
+  "colors": {
+    "primary": "#2563eb",
+    "light": "#3b82f6",
+    "dark": "#1d4ed8"
+  },
+  "favicon": "/favicon.png",
+  "css": "/typography.css",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "getting-started",
+              "quickstart",
+              "installation",
+              "ai-integration"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/simulator",
+              "guides/fi-to-card",
+              "guides/fintech-aft",
+              "guides/security",
+              "guides/testing"
+            ]
+          },
+          {
+            "group": "SDK Reference",
+            "pages": [
+              "reference/typescript/overview",
+              "reference/typescript/orchestrator",
+              "reference/typescript/builder",
+              "reference/typescript/transport",
+              "reference/typescript/storage",
+              "reference/typescript/policy",
+              "reference/typescript/telemetry",
+              "reference/python/overview",
+              "reference/python/orchestrator",
+              "reference/python/builder",
+              "reference/python/transport"
+            ]
+          },
+          {
+            "group": "API",
+            "pages": [
+              "api/visa-direct"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/overview",
+              "api/payouts",
+              "api/preflight",
+              "api/security"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Dashboard",
+          "href": "https://visa-direct-surface.vercel.app/dashboard",
+          "icon": "chart-bar"
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python",
+          "icon": "github"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "api": {
+    "playground": {
+      "display": "interactive",
+      "proxy": true,
+      "examples": {
+        "languages": ["typescript", "python", "curl", "javascript", "go", "java"],
+        "defaults": "all",
+        "prefill": true
+      }
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://visa-direct-surface.vercel.app/dashboard"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python",
+      "linkedin": "https://linkedin.com/company/visa"
+    }
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXX"
+    },
+    "posthog": {
+      "apiKey": "phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  }
+}

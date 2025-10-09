@@ -20,8 +20,12 @@
       "requiresMLE": true
     },
     {
-      "path": "/visapayouts/v3/payouts/:id",
+      "path": "/visapayouts/v3/payouts",
       "requiresMLE": true
+    },
+    {
+      "path": "/visapayouts/v3/payouts/:id",
+      "requiresMLE": false
     },
     {
       "path": "/visaaliasdirectory/v1/resolve",
@@ -46,6 +50,6 @@
   ],
   "jwks": {
     "url": "${VISA_JWKS_URL:-https://api.visa.com/jwks}",
-    "cacheTtlSeconds": 300
+    "cacheTtlSeconds": 600
   }
 }

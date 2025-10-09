@@ -1,0 +1,532 @@
+openapi: 3.1.0
+info:
+  title: Visa Direct Surface Demo API
+  version: "1.0.0"
+  description: |
+    Curated subset of Visa Direct endpoints used by the Visa Direct Surface experience.
+    This specification mirrors the simulator and SDK flows (cards, accounts, wallets,
+    preflight services, funding, and payouts). Use Visa's official documentation for
+    production onboarding and payload requirements.
+servers:
+  - url: https://sandbox.api.visa.com
+    description: Visa Direct Sandbox
+  - url: https://api.visa.com
+    description: Visa Direct Production
+  - url: http://127.0.0.1:8766
+    description: Local simulator
+tags:
+  - name: Preflight
+  - name: Funding
+  - name: Payouts
+  - name: Status
+security:
+  - MutualTLS: []
+  - ApiKeyAuth: []
+paths:
+  /visaaliasdirectory/v1/resolve:
+    post:
+      tags: [Preflight]
+      summary: Resolve alias to credential
+      operationId: resolveAlias
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AliasResolveRequest'
+      responses:
+        '200':
+          description: Alias resolved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AliasResolveResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /pav/v1/card/validation:
+    post:
+      tags: [Preflight]
+      summary: Primary Account Validation (PAV)
+      operationId: validateCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardValidationRequest'
+      responses:
+        '200':
+          description: Card validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardValidationResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /paai/v1/fundstransfer/attributes/inquiry:
+    post:
+      tags: [Preflight]
+      summary: Fund Transfer Attributes Inquiry (FTAI)
+      operationId: ftaiInquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundTransferAttributesRequest'
+      responses:
+        '200':
+          description: Fund transfer attributes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundTransferAttributesResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /visapayouts/v3/payouts/validate:
+    post:
+      tags: [Preflight]
+      summary: Validate payout payload
+      operationId: validatePayout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutExecutionRequest'
+      responses:
+        '200':
+          description: Validation outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutValidationResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /forexrates/v1/lock:
+    post:
+      tags: [Preflight]
+      summary: Lock FX quote
+      operationId: lockFxQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FxLockRequest'
+      responses:
+        '200':
+          description: Quote locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxLockResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /visadirect/fundstransfer/v1/pullfunds:
+    post:
+      tags: [Funding]
+      summary: Initiate pull funds (AFT/PIS)
+      operationId: pullFunds
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingInitiationRequest'
+      responses:
+        '200':
+          description: Funding outcome
+          headers:
+            x-idempotency-key:
+              $ref: '#/components/headers/IdempotencyKey'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingInitiationResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /visadirect/fundstransfer/v1/pushfunds:
+    post:
+      tags: [Payouts]
+      summary: Push card payout (OCT)
+      operationId: pushFunds
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutExecutionRequest'
+      responses:
+        '200':
+          description: Card payout response
+          headers:
+            x-idempotency-key:
+              $ref: '#/components/headers/IdempotencyKey'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /accountpayouts/v1/payout:
+    post:
+      tags: [Payouts]
+      summary: Account payout
+      operationId: accountPayout
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutExecutionRequest'
+      responses:
+        '200':
+          description: Account payout response
+          headers:
+            x-idempotency-key:
+              $ref: '#/components/headers/IdempotencyKey'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /walletpayouts/v1/payout:
+    post:
+      tags: [Payouts]
+      summary: Wallet payout
+      operationId: walletPayout
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutExecutionRequest'
+      responses:
+        '200':
+          description: Wallet payout response
+          headers:
+            x-idempotency-key:
+              $ref: '#/components/headers/IdempotencyKey'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /visapayouts/v3/payouts/{payoutId}:
+    get:
+      tags: [Status]
+      summary: Retrieve payout status
+      operationId: getPayoutStatus
+      parameters:
+        - name: payoutId
+          in: path
+          required: true
+          description: Payout identifier returned from execution endpoints.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payout status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        '404':
+          description: Payout not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  securitySchemes:
+    MutualTLS:
+      type: mutualTLS
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Optional API key header depending on issuer configuration.
+  parameters:
+    IdempotencyKey:
+      name: x-idempotency-key
+      in: header
+      description: Unique key to ensure idempotent processing.
+      required: true
+      schema:
+        type: string
+  headers:
+    IdempotencyKey:
+      description: Echo of the idempotency key used in the request.
+      schema:
+        type: string
+  responses:
+    ErrorResponse:
+      description: Error response from Visa Direct
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    AliasResolveRequest:
+      type: object
+      required: [alias]
+      properties:
+        alias:
+          type: string
+          description: Alias value (email, phone, etc.).
+        aliasType:
+          type: string
+          description: Alias type (EMAIL, MOBILE, etc.).
+          default: EMAIL
+    AliasResolveResponse:
+      type: object
+      required: [alias, aliasType, credentialType, panToken]
+      properties:
+        alias:
+          type: string
+        aliasType:
+          type: string
+        credentialType:
+          type: string
+          description: Credential type returned (CARD, ACCOUNT, etc.).
+        panToken:
+          type: string
+          description: Tokenized card PAN.
+    CardValidationRequest:
+      type: object
+      required: [panToken]
+      properties:
+        panToken:
+          type: string
+    CardValidationResponse:
+      type: object
+      required: [cardStatus]
+      properties:
+        cardStatus:
+          type: string
+          enum: [GOOD, BAD]
+    FundTransferAttributesRequest:
+      type: object
+      required: [panToken]
+      properties:
+        panToken:
+          type: string
+    FundTransferAttributesResponse:
+      type: object
+      required: [octEligible]
+      properties:
+        octEligible:
+          type: boolean
+        reasonCodes:
+          type: array
+          items:
+            type: string
+    PayoutValidationResponse:
+      type: object
+      required: [valid, warnings]
+      properties:
+        valid:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+    FxLockRequest:
+      type: object
+      required: [src, dst]
+      properties:
+        src:
+          type: string
+          description: Source currency (ISO 4217).
+        dst:
+          type: string
+          description: Destination currency (ISO 4217).
+        amount:
+          type: object
+          properties:
+            minor:
+              type: integer
+              description: Minor amount for quote (optional).
+    FxLockResponse:
+      type: object
+      required: [quoteId, expiresAt]
+      properties:
+        quoteId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    FundingInitiationRequest:
+      type: object
+      required: [originatorId, amount]
+      properties:
+        originatorId:
+          type: string
+        fundingType:
+          type: string
+          description: Funding type (AFT, PIS, etc.).
+          default: AFT
+        amount:
+          $ref: '#/components/schemas/Amount'
+        sourceOfFunds:
+          type: object
+          additionalProperties: true
+    FundingInitiationResponse:
+      type: object
+      required: [fundingType, status, receiptId, amount, created]
+      properties:
+        fundingType:
+          type: string
+        status:
+          type: string
+          enum: [approved, declined]
+        receiptId:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Amount'
+        created:
+          type: string
+          format: date-time
+    PayoutExecutionRequest:
+      type: object
+      required: [originatorId, funding, destination, amount]
+      properties:
+        originatorId:
+          type: string
+        funding:
+          oneOf:
+            - $ref: '#/components/schemas/FundingInternal'
+            - $ref: '#/components/schemas/FundingAft'
+            - $ref: '#/components/schemas/FundingPis'
+        destination:
+          oneOf:
+            - $ref: '#/components/schemas/DestinationCard'
+            - $ref: '#/components/schemas/DestinationAccount'
+            - $ref: '#/components/schemas/DestinationWallet'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        fxQuoteId:
+          type: string
+          description: Optional FX quote identifier.
+        compliancePayload:
+          type: object
+          additionalProperties: true
+    PayoutResponse:
+      type: object
+      required: [payoutId, status, destination, amount, created]
+      properties:
+        payoutId:
+          type: string
+        status:
+          type: string
+          enum: [executed, failed]
+        destination:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Amount'
+        created:
+          type: string
+          format: date-time
+    NotFoundResponse:
+      type: object
+      required: [payoutId, status]
+      properties:
+        payoutId:
+          type: string
+        status:
+          type: string
+          description: "Status string, e.g. 'unknown' when not found."
+    Amount:
+      type: object
+      required: [currency, minor]
+      properties:
+        currency:
+          type: string
+        minor:
+          type: integer
+    FundingInternal:
+      type: object
+      required: [type, debitConfirmed, confirmationRef]
+      properties:
+        type:
+          type: string
+          enum: [INTERNAL]
+        debitConfirmed:
+          type: boolean
+        confirmationRef:
+          type: string
+    FundingAft:
+      type: object
+      required: [type, receiptId, status]
+      properties:
+        type:
+          type: string
+          enum: [AFT]
+        receiptId:
+          type: string
+        status:
+          type: string
+          enum: [approved, declined]
+    FundingPis:
+      type: object
+      required: [type, paymentId, status]
+      properties:
+        type:
+          type: string
+          enum: [PIS]
+        paymentId:
+          type: string
+        status:
+          type: string
+          enum: [executed, failed]
+    DestinationCard:
+      type: object
+      required: [type, panToken]
+      properties:
+        type:
+          type: string
+          enum: [CARD]
+        panToken:
+          type: string
+    DestinationAccount:
+      type: object
+      required: [type, accountId]
+      properties:
+        type:
+          type: string
+          enum: [ACCOUNT]
+        accountId:
+          type: string
+    DestinationWallet:
+      type: object
+      required: [type, walletId]
+      properties:
+        type:
+          type: string
+          enum: [WALLET]
+        walletId:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+        details:
+          type: array
+          items:
+            type: string

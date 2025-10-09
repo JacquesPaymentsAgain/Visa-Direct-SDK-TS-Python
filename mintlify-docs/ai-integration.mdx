@@ -1,0 +1,265 @@
+---
+title: 'AI Integration & MCP'
+description: 'Connect your AI tools to our documentation and API for seamless development'
+icon: brain
+keywords: ['ai', 'mcp', 'claude', 'cursor', 'vscode', 'integration', 'assistant']
+---
+
+<Callout icon="sparkles">
+  **AI-Powered Development**: Connect our MCP server to your AI tools for instant access to documentation, API endpoints, and code examples. No more copying and pasting - your AI assistant can directly interact with our resources.
+</Callout>
+
+## What is MCP?
+
+Model Context Protocol (MCP) allows AI tools to directly access external resources like documentation, APIs, and databases. Our MCP server provides:
+
+<CardGroup cols={2}>
+  <Card title="Documentation Access" icon="book">
+    Search and retrieve specific documentation sections
+  </Card>
+  <Card title="API Exploration" icon="code">
+    Discover and test API endpoints with real examples
+  </Card>
+  <Card title="Code Examples" icon="terminal">
+    Access TypeScript and Python SDK examples
+  </Card>
+  <Card title="Interactive Testing" icon="play">
+    Execute API calls directly through your AI assistant
+  </Card>
+</CardGroup>
+
+## Quick Setup
+
+### Connect to Claude Desktop
+
+1. **Get MCP Server URL**: Navigate to your Mintlify dashboard and find your MCP server URL
+2. **Configure Claude**: Add the MCP server to Claude Desktop
+3. **Start Using**: Ask Claude questions about our API and documentation
+
+<Steps>
+  <Step title="Open Claude Desktop">
+    Launch Claude Desktop application
+  </Step>
+  <Step title="Access Settings">
+    Go to Settings → Developer → Model Context Protocol
+  </Step>
+  <Step title="Add Server">
+    Click "Add Server" and enter:
+    - **Name**: Visa Direct SDK
+    - **URL**: `https://your-domain.mintlify.app/mcp`
+  </Step>
+  <Step title="Test Connection">
+    Start a new conversation and ask: "What are the main Visa Direct payout endpoints?"
+  </Step>
+</Steps>
+
+### Connect to Cursor
+
+1. **Open Command Palette**: `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows)
+2. **Search MCP**: Type "Open MCP settings"
+3. **Add Server**: Configure your MCP server in the settings
+
+```json
+{
+  "servers": {
+    "visa-direct-sdk": {
+      "type": "http",
+      "url": "https://your-domain.mintlify.app/mcp"
+    }
+  }
+}
+```
+
+### Connect to VS Code
+
+1. **Install Extension**: Install the MCP extension for VS Code
+2. **Configure Server**: Add server configuration to `.vscode/mcp.json`
+
+```json
+{
+  "servers": {
+    "visa-direct-sdk": {
+      "type": "http",
+      "url": "https://your-domain.mintlify.app/mcp"
+    }
+  }
+}
+```
+
+## Using MCP with AI Tools
+
+### Example Interactions
+
+Once connected, you can ask your AI assistant questions like:
+
+<AccordionGroup>
+  <Accordion title="Documentation Queries">
+    - "How do I set up mTLS authentication?"
+    - "What are the different funding types available?"
+    - "Show me the error handling patterns"
+    - "What's the preflight pipeline flow?"
+  </Accordion>
+  <Accordion title="API Exploration">
+    - "What endpoints are available for card payouts?"
+    - "Show me the request/response schema for alias resolution"
+    - "What authentication methods are required?"
+    - "How do I test the preflight services?"
+  </Accordion>
+  <Accordion title="Code Generation">
+    - "Generate a TypeScript example for FI to card payout"
+    - "Create a Python error handling wrapper"
+    - "Show me how to implement retry logic"
+    - "Generate test cases for the SDK"
+  </Accordion>
+  <Accordion title="Troubleshooting">
+    - "Why is my mTLS connection failing?"
+    - "How do I handle card validation errors?"
+    - "What causes insufficient funds errors?"
+    - "How do I debug payout failures?"
+  </Accordion>
+</AccordionGroup>
+
+### Advanced Usage
+
+<CodeGroup>
+
+```typescript TypeScript
+// Ask Claude to generate code with MCP context
+// "Generate a complete payout service class using the Visa Direct SDK"
+
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+export class PayoutService {
+  private builder: PayoutBuilder;
+
+  constructor(config: PayoutConfig) {
+    const http = new SecureHttpClient({
+      baseUrl: config.baseUrl,
+      certPath: config.certPath,
+      keyPath: config.keyPath,
+      caPath: config.caPath
+    });
+    
+    this.builder = PayoutBuilder.create(http);
+  }
+
+  async executeCardPayout(request: CardPayoutRequest): Promise<PayoutReceipt> {
+    return await this.builder
+      .forOriginator(request.originatorId)
+      .withFundingInternal(request.fundingConfirmed, request.confirmationRef)
+      .toCardViaAlias(request.alias, request.aliasType)
+      .forAmount(request.currency, request.amountMinor)
+      .withIdempotencyKey(request.idempotencyKey)
+      .execute();
+  }
+}
+```
+
+```python Python
+# Ask Claude to generate Python code with MCP context
+# "Create a Python service class for Visa Direct payouts"
+
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+from typing import Dict, Any
+
+class PayoutService:
+    def __init__(self, config: Dict[str, str]):
+        http = SecureHttpClient(
+            base_url=config['base_url'],
+            cert_path=config['cert_path'],
+            key_path=config['key_path'],
+            ca_path=config['ca_path']
+        )
+        self.builder = PayoutBuilder.create(http)
+
+    async def execute_card_payout(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return await self.builder \
+            .for_originator(request['originator_id']) \
+            .with_funding_internal(request['funding_confirmed'], request['confirmation_ref']) \
+            .to_card_via_alias(request['alias'], request['alias_type']) \
+            .for_amount(request['currency'], request['amount_minor']) \
+            .with_idempotency_key(request['idempotency_key']) \
+            .execute()
+```
+
+</CodeGroup>
+
+## Contextual Menu Integration
+
+Every page in our documentation includes a contextual menu with AI integration options:
+
+<CardGroup cols={2}>
+  <Card title="Copy as Markdown" icon="copy">
+    Copy the current page content for use in AI tools
+  </Card>
+  <Card title="Open in ChatGPT" icon="message-square">
+    Start a ChatGPT conversation with this page as context
+  </Card>
+  <Card title="Open in Claude" icon="brain">
+    Launch Claude with this page preloaded
+  </Card>
+  <Card title="Connect MCP Server" icon="link">
+    Get instructions for connecting our MCP server
+  </Card>
+</CardGroup>
+
+## Benefits of MCP Integration
+
+<CardGroup cols={2}>
+  <Card title="Real-time Documentation" icon="book-open">
+    Access the latest documentation without manual updates
+  </Card>
+  <Card title="Interactive API Testing" icon="play">
+    Test API endpoints directly through your AI assistant
+  </Card>
+  <Card title="Contextual Code Generation" icon="code">
+    Generate code examples tailored to your specific use case
+  </Card>
+  <Card title="Intelligent Troubleshooting" icon="bug">
+    Get targeted help based on your specific error messages
+  </Card>
+</CardGroup>
+
+## Troubleshooting MCP Connection
+
+<AccordionGroup>
+  <Accordion title="Connection Refused">
+    - Verify the MCP server URL is correct
+    - Check if the documentation site is accessible
+    - Ensure your AI tool supports MCP protocol
+  </Accordion>
+  <Accordion title="Authentication Issues">
+    - Check if authentication is required
+    - Verify API keys or tokens are valid
+    - Review MCP server configuration
+  </Accordion>
+  <Accordion title="Limited Functionality">
+    - Ensure you're using a compatible AI tool
+    - Check MCP server capabilities
+    - Verify the connection is fully established
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Try Interactive Examples" icon="play" href="/getting-started">
+    Follow our interactive getting started guide
+  </Card>
+  <Card title="Explore API Reference" icon="code" href="/api/visa-direct">
+    Test endpoints in the interactive playground
+  </Card>
+  <Card title="Join Community" icon="users" href="https://discord.gg/visa-direct-sdk">
+    Get help from other developers
+  </Card>
+  <Card title="Report Issues" icon="github" href="https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python/issues">
+    Submit feedback and feature requests
+  </Card>
+</CardGroup>
+
+<Callout icon="lightbulb">
+  **Pro Tip**: Use the contextual menu on any page to quickly copy content or connect to AI tools. The MCP server provides the most comprehensive integration for development workflows.
+</Callout>
+
+

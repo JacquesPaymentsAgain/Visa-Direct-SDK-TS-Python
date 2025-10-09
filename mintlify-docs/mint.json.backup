@@ -1,0 +1,182 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Visa Direct SDK",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#2563eb",
+    "light": "#3b82f6",
+    "dark": "#1d4ed8",
+    "anchors": {
+      "from": "#2563eb",
+      "to": "#3b82f6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://visa-direct-surface.vercel.app/dashboard"
+  },
+  "tabs": [
+    {
+      "name": "TypeScript",
+      "url": "typescript"
+    },
+    {
+      "name": "Python",
+      "url": "python"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Dashboard",
+      "icon": "chart-bar",
+      "url": "https://visa-direct-surface.vercel.app/dashboard"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python"
+    }
+  ],
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      {
+        "title": "Open Visa Direct Surface",
+        "description": "Jump to the Visa Direct Surface dashboard with this page as context",
+        "icon": "compass",
+        "href": "https://visa-direct-surface.vercel.app/dashboard"
+      }
+    ]
+  },
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "getting-started",
+        "quickstart",
+        "installation",
+        "ai-integration"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/fi-to-card",
+        "guides/fintech-aft",
+        "guides/security",
+        "guides/testing"
+      ]
+    },
+    {
+      "group": "SDK Reference",
+      "pages": [
+        "reference/typescript/overview",
+        "reference/typescript/orchestrator",
+        "reference/typescript/builder",
+        "reference/typescript/transport",
+        "reference/typescript/storage",
+        "reference/typescript/policy",
+        "reference/typescript/telemetry",
+        "reference/python/overview",
+        "reference/python/orchestrator",
+        "reference/python/builder",
+        "reference/python/transport"
+      ]
+    },
+    {
+      "group": "API",
+      "pages": [
+        "api/visa-direct"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api/overview",
+        "api/payouts",
+        "api/preflight",
+        "api/security"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python",
+    "linkedin": "https://linkedin.com/company/visa"
+  },
+  "api": {
+    "playground": {
+      "display": "interactive",
+      "proxy": true,
+      "examples": {
+        "languages": ["typescript", "python", "curl", "javascript", "go", "java"],
+        "defaults": "all",
+        "prefill": true
+      }
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode",
+      {
+        "title": "Test in Simulator",
+        "description": "Open the local simulator with this endpoint preloaded",
+        "icon": "flask",
+        "href": "http://127.0.0.1:8766"
+      },
+      {
+        "title": "SDK Examples",
+        "description": "View TypeScript and Python SDK examples for this endpoint",
+        "icon": "code",
+        "href": "/guides/fi-to-card"
+      },
+      {
+        "title": "GitHub Issues",
+        "description": "Report bugs or request features on GitHub",
+        "icon": "github",
+        "href": "https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python/issues"
+      },
+      {
+        "title": "Discord Community",
+        "description": "Join our Discord community for support and discussions",
+        "icon": "message-circle",
+        "href": "https://discord.gg/visa-direct-sdk"
+      },
+      {
+        "title": "Visa Direct Dashboard",
+        "description": "Open the Visa Direct Surface dashboard",
+        "icon": "chart-bar",
+        "href": "https://visa-direct-surface.vercel.app/dashboard"
+      }
+    ]
+  },
+  "analytics": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXX"
+    },
+    "posthog": {
+      "apiKey": "phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  }
+}

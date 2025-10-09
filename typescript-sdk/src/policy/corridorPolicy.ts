@@ -1,6 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import embeddedPolicyJson from './corridor-policy.default.json';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const embeddedPolicyJson = require('./corridor-policy.default.json');
 
 export type CorridorRules = {
 	fx?: { lockRequired?: boolean; slippageBpsMax?: number };

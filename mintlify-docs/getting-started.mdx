@@ -1,0 +1,445 @@
+---
+title: 'Getting Started'
+description: 'Interactive guide to get up and running with Visa Direct SDK in minutes'
+icon: rocket
+keywords: ['getting started', 'quickstart', 'setup', 'installation', 'first payout']
+---
+
+<Callout icon="zap">
+  **Interactive Setup**: Follow this step-by-step guide with live examples and real-time testing. Use the contextual menu to copy code snippets or open them in your preferred AI tool.
+</Callout>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+<CardGroup cols={2}>
+  <Card title="Development Environment" icon="laptop">
+    Node.js 18+ or Python 3.9+ installed
+  </Card>
+  <Card title="Visa Direct Access" icon="key">
+    API credentials and mTLS certificates
+  </Card>
+  <Card title="Local Simulator" icon="flask">
+    Our Flask simulator for testing
+  </Card>
+  <Card title="Code Editor" icon="code">
+    VS Code, Cursor, or your preferred IDE
+  </Card>
+</CardGroup>
+
+## Step 1: Environment Setup
+
+### Quick Setup with Environment Configuration
+
+Our SDK includes a powerful environment configuration tool that makes setup effortless:
+
+```bash
+# Clone the repository
+git clone https://github.com/JacquesPaymentsAgain/Visa-Direct-SDK-TS-Python.git
+cd visa-direct-sdk-cursor-pack-v2
+
+# Configure for Local Simulator (Recommended for Development)
+./configure_environment.sh simulator
+source .env.current
+
+# Or configure for Live Visa Sandbox (Production Testing)
+./configure_environment.sh live
+source .env.current
+```
+
+<Callout icon="zap">
+  **Environment Switching**: Easily switch between simulator and live sandbox environments with a single command. Perfect for development workflows!
+</Callout>
+
+### Install Dependencies
+
+Choose your preferred language:
+
+<CodeGroup>
+
+```bash TypeScript
+# Install the TypeScript SDK
+npm install visa-direct-sdk
+
+# Or install globally for CLI usage
+npm install -g visa-direct-sdk
+```
+
+```bash Python
+# Install the Python SDK
+pip install visa-direct-sdk
+
+# Or install in a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install visa-direct-sdk
+```
+
+</CodeGroup>
+
+### Environment Variables
+
+Set up your environment variables:
+
+<CodeGroup>
+
+```bash TypeScript
+# .env file
+VISA_BASE_URL=https://sandbox.api.visa.com
+VISA_CERT_PATH=./certs/client.pem
+VISA_KEY_PATH=./certs/client.key
+VISA_CA_PATH=./certs/ca.pem
+VISA_JWE_PUBLIC_KEY=./certs/jwe_public.pem
+VISA_JWE_PRIVATE_KEY=./certs/jwe_private.pem
+```
+
+```bash Python
+# .env file
+export VISA_BASE_URL=https://sandbox.api.visa.com
+export VISA_CERT_PATH=./certs/client.pem
+export VISA_KEY_PATH=./certs/client.key
+export VISA_CA_PATH=./certs/ca.pem
+export VISA_JWE_PUBLIC_KEY=./certs/jwe_public.pem
+export VISA_JWE_PRIVATE_KEY=./certs/jwe_private.pem
+```
+
+</CodeGroup>
+
+## Step 2: Start the Simulator
+
+Our comprehensive simulator provides 11 endpoints with deterministic behavior:
+
+```bash
+# Start the simulator (if not already running)
+cd simulator
+python app.py
+```
+
+The simulator will be available at `http://127.0.0.1:8766`.
+
+<Callout icon="info">
+  **Comprehensive Simulator**: Our simulator provides 100% API coverage with 11 endpoints including preflight services, funding operations, payout execution, and FX operations. Perfect for development and testing!
+</Callout>
+
+### Simulator Features
+
+<CardGroup cols={2}>
+  <Card title="Payout Operations" icon="credit-card">
+    - Card Payout (OCT)
+    - Account Payout
+    - Wallet Payout
+    - Payout Status
+  </Card>
+  <Card title="Preflight Services" icon="search">
+    - Alias Resolution
+    - Card Validation (PAV)
+    - Fund Transfer Attributes (FTAI)
+    - Payout Validation
+  </Card>
+  <Card title="Funding Operations" icon="bank">
+    - AFT/PIS Funding
+    - Pull Funds
+  </Card>
+  <Card title="FX Operations" icon="exchange">
+    - FX Quote Lock
+    - Currency Conversion
+  </Card>
+</CardGroup>
+
+## Step 3: Configure Your Client
+
+### TypeScript Configuration
+
+```typescript
+import { SecureHttpClient, PayoutBuilder } from 'visa-direct-sdk';
+
+// Configure the HTTP client
+const http = new SecureHttpClient({
+  baseUrl: process.env.VISA_BASE_URL || 'http://127.0.0.1:8766',
+  certPath: process.env.VISA_CERT_PATH || './certs/client.pem',
+  keyPath: process.env.VISA_KEY_PATH || './certs/client.key',
+  caPath: process.env.VISA_CA_PATH || './certs/ca.pem',
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY || './certs/jwe_public.pem',
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY || './certs/jwe_private.pem'
+  }
+});
+
+// Create the payout builder
+const builder = PayoutBuilder.create(http);
+```
+
+### Python Configuration
+
+```python
+import os
+from visa_direct_sdk.transport.secure_http_client import SecureHttpClient
+from visa_direct_sdk.dx.builder import PayoutBuilder
+
+# Configure the HTTP client
+http = SecureHttpClient(
+    base_url=os.getenv('VISA_BASE_URL', 'http://127.0.0.1:8766'),
+    cert_path=os.getenv('VISA_CERT_PATH', './certs/client.pem'),
+    key_path=os.getenv('VISA_KEY_PATH', './certs/client.key'),
+    ca_path=os.getenv('VISA_CA_PATH', './certs/ca.pem'),
+    jwe_public_key=os.getenv('VISA_JWE_PUBLIC_KEY', './certs/jwe_public.pem'),
+    jwe_private_key=os.getenv('VISA_JWE_PRIVATE_KEY', './certs/jwe_private.pem')
+)
+
+# Create the payout builder
+builder = PayoutBuilder.create(http)
+```
+
+## Step 4: Execute Your First Payout
+
+### Simple FI to Card Transaction
+
+<CodeGroup>
+
+```typescript TypeScript
+async function executeFirstPayout() {
+  try {
+    const receipt = await builder
+      .forOriginator('fi-001')
+      .withFundingInternal(true, 'LEDGER_CONFIRM_123')
+      .toCardViaAlias({ 
+        alias: '+447911123456', 
+        aliasType: 'MOBILE' 
+      })
+      .forAmount('GBP', 5000) // £50.00
+      .withIdempotencyKey('demo-first-payout')
+      .execute();
+
+    console.log('✅ Payout successful:', receipt);
+    return receipt;
+  } catch (error) {
+    console.error('❌ Payout failed:', error);
+    throw error;
+  }
+}
+
+// Execute the payout
+executeFirstPayout();
+```
+
+```python Python
+async def execute_first_payout():
+    try:
+        receipt = builder \
+            .for_originator('fi-001') \
+            .with_funding_internal(True, 'LEDGER_CONFIRM_123') \
+            .to_card_via_alias('+447911123456', 'MOBILE') \
+            .for_amount('GBP', 5000) \
+            .with_idempotency_key('demo-first-payout') \
+            .execute()
+
+        print('✅ Payout successful:', receipt)
+        return receipt
+    except Exception as error:
+        print('❌ Payout failed:', error)
+        raise error
+
+# Execute the payout
+await execute_first_payout()
+```
+
+</CodeGroup>
+
+## Step 5: Pilot Testing
+
+Test your implementation with our comprehensive pilot testing suite:
+
+```bash
+# Run TypeScript pilot tests
+npm run pilot:ts
+
+# Run Python pilot tests
+npm run pilot:py
+
+# Run specific pilot scenarios
+npm run pilot:domestic      # Domestic transactions (US→US)
+npm run pilot:crossborder   # Cross-border transactions (GB→PH)
+
+# Run comprehensive test suite
+npm run test:comprehensive
+```
+
+<Callout icon="rocket">
+  **Production Ready**: Our pilot tests validate both domestic and cross-border transactions, ensuring your implementation is ready for production deployment.
+</Callout>
+
+## Step 6: Test with Interactive Playground
+
+Use our interactive API playground to test endpoints directly:
+
+1. **Navigate to the API Reference**: Go to [API Reference](/api/visa-direct)
+2. **Select an Endpoint**: Choose any endpoint from the preflight, funding, or payout sections
+3. **Configure Parameters**: Use the pre-filled examples or customize them
+4. **Execute Request**: Click "Send" to test against the simulator
+5. **View Response**: See the response and any error details
+
+<Callout icon="play">
+  **Try It Now**: The API playground is pre-configured to work with our simulator. All examples include realistic test data.
+</Callout>
+
+## Step 7: Error Handling & Best Practices
+
+### Comprehensive Error Handling
+
+<CodeGroup>
+
+```typescript TypeScript
+import { 
+  LedgerNotConfirmedError,
+  CardValidationError,
+  InsufficientFundsError,
+  NetworkError,
+  ValidationError
+} from 'visa-direct-sdk';
+
+async function robustPayout() {
+  try {
+    const receipt = await builder
+      .forOriginator('fi-001')
+      .withFundingInternal(true, 'LEDGER_CONFIRM_123')
+      .toCardViaAlias({ alias: '+447911123456', aliasType: 'MOBILE' })
+      .forAmount('GBP', 5000)
+      .withIdempotencyKey('robust-demo')
+      .execute();
+
+    return receipt;
+  } catch (error) {
+    if (error instanceof LedgerNotConfirmedError) {
+      console.error('Ledger confirmation failed:', error.message);
+      // Handle ledger confirmation failure
+    } else if (error instanceof CardValidationError) {
+      console.error('Card validation failed:', error.message);
+      // Handle invalid card details
+    } else if (error instanceof InsufficientFundsError) {
+      console.error('Insufficient funds:', error.message);
+      // Handle insufficient funds
+    } else if (error instanceof NetworkError) {
+      console.error('Network error:', error.message);
+      // Handle network issues
+    } else if (error instanceof ValidationError) {
+      console.error('Validation error:', error.message);
+      // Handle validation failures
+    } else {
+      console.error('Unexpected error:', error);
+    }
+    throw error;
+  }
+}
+```
+
+```python Python
+from visa_direct_sdk.errors import (
+    LedgerNotConfirmedError,
+    CardValidationError,
+    InsufficientFundsError,
+    NetworkError,
+    ValidationError
+)
+
+async def robust_payout():
+    try:
+        receipt = builder \
+            .for_originator('fi-001') \
+            .with_funding_internal(True, 'LEDGER_CONFIRM_123') \
+            .to_card_via_alias('+447911123456', 'MOBILE') \
+            .for_amount('GBP', 5000) \
+            .with_idempotency_key('robust-demo') \
+            .execute()
+
+        return receipt
+    except LedgerNotConfirmedError as e:
+        print('Ledger confirmation failed:', str(e))
+        # Handle ledger confirmation failure
+    except CardValidationError as e:
+        print('Card validation failed:', str(e))
+        # Handle invalid card details
+    except InsufficientFundsError as e:
+        print('Insufficient funds:', str(e))
+        # Handle insufficient funds
+    except NetworkError as e:
+        print('Network error:', str(e))
+        # Handle network issues
+    except ValidationError as e:
+        print('Validation error:', str(e))
+        # Handle validation failures
+    except Exception as e:
+        print('Unexpected error:', str(e))
+        raise e
+```
+
+</CodeGroup>
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Security" icon="shield">
+    - Always use mTLS authentication
+    - Enable JWE encryption for sensitive data
+    - Validate all input parameters
+    - Use secure certificate storage
+  </Card>
+  <Card title="Reliability" icon="check-circle">
+    - Implement proper error handling
+    - Use idempotency keys for retries
+    - Set up comprehensive logging
+    - Monitor transaction status
+  </Card>
+  <Card title="Performance" icon="zap">
+    - Use connection pooling
+    - Implement request timeouts
+    - Cache frequently used data
+    - Optimize payload sizes
+  </Card>
+  <Card title="Compliance" icon="file-check">
+    - Follow PCI DSS requirements
+    - Implement audit logging
+    - Use preflight validation
+    - Maintain transaction records
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Guides" icon="book" href="/guides/fi-to-card">
+    Learn about specific payout scenarios
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/visa-direct">
+    Explore the complete API documentation
+  </Card>
+  <Card title="SDK Reference" icon="terminal" href="/reference/typescript/overview">
+    Deep dive into SDK capabilities
+  </Card>
+  <Card title="Dashboard" icon="chart-bar" href="https://visa-direct-surface.vercel.app/dashboard">
+    Use the developer dashboard
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Certificate Issues">
+    Ensure your mTLS certificates are properly formatted and accessible. Check file permissions and certificate validity.
+  </Accordion>
+  <Accordion title="Connection Errors">
+    Verify the simulator is running and accessible. Check firewall settings and network connectivity.
+  </Accordion>
+  <Accordion title="Validation Failures">
+    Review the error messages and ensure all required parameters are provided with correct formats.
+  </Accordion>
+  <Accordion title="SDK Import Issues">
+    Verify the SDK is properly installed and your environment is correctly configured.
+  </Accordion>
+</AccordionGroup>
+
+<Callout icon="help">
+  **Need Help?**: Use the contextual menu to copy this guide and ask questions in ChatGPT, Claude, or Perplexity. You can also connect to our MCP server for seamless AI integration.
+</Callout>
+
+

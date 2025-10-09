@@ -1,0 +1,352 @@
+---
+title: Fintech AFT Payout Guide
+icon: building-2
+---
+
+# Fintech AFT Payout Guide
+
+This guide demonstrates how to implement AFT (Account Funding Transaction) payouts for fintech applications using the Visa Direct SDK.
+
+## Overview
+
+AFT allows fintech companies to send funds to customer accounts or cards. This is ideal for:
+- Digital wallet top-ups
+- Account-to-account transfers
+- Card funding
+- P2P payments
+
+## Architecture
+
+The AFT flow includes several security layers:
+
+1. **Preflight Validation** - Verify recipient details
+2. **Compliance Screening** - Check regulatory requirements
+3. **FX Quoting** - Handle currency conversion
+4. **AFT Execution** - Process the funding transaction
+5. **Compensation Events** - Handle failures gracefully
+
+## Implementation
+
+### 1. Setup
+
+<CodeGroup>
+```typescript TypeScript
+import { VisaDirectClient } from 'visa-direct-sdk';
+
+const client = new VisaDirectClient({
+  baseUrl: process.env.VISA_BASE_URL,
+  mTLS: {
+    cert: process.env.VISA_CERT_PATH,
+    key: process.env.VISA_KEY_PATH
+  },
+  jwe: {
+    publicKey: process.env.VISA_JWE_PUBLIC_KEY,
+    privateKey: process.env.VISA_JWE_PRIVATE_KEY
+  },
+  idempotencyStore: new RedisIdempotencyStore(redisClient),
+  receiptStore: new RedisReceiptStore(redisClient)
+});
+```
+
+```python Python
+from visa_direct_sdk import VisaDirectClient
+from visa_direct_sdk.storage import RedisIdempotencyStore, RedisReceiptStore
+
+client = VisaDirectClient(
+    base_url=os.getenv('VISA_BASE_URL'),
+    mtls_cert_path=os.getenv('VISA_CERT_PATH'),
+    mtls_key_path=os.getenv('VISA_KEY_PATH'),
+    jwe_public_key=os.getenv('VISA_JWE_PUBLIC_KEY'),
+    jwe_private_key=os.getenv('VISA_JWE_PRIVATE_KEY'),
+    idempotency_store=RedisIdempotencyStore(redis_client),
+    receipt_store=RedisReceiptStore(redis_client)
+)
+```
+</CodeGroup>
+
+### 2. Card Funding Example
+
+<CodeGroup>
+```typescript TypeScript
+async function fundCard() {
+  const idempotencyKey = `aft_${Date.now()}_${Math.random()}`;
+  
+  try {
+    const receipt = await client.payouts.build()
+      .toCardViaAlias({
+        alias: '+447911123456',
+        aliasType: 'MOBILE'
+      })
+      .withFundingFromAFT({
+        accountId: 'FINTRECH_ACCOUNT_789',
+        receiptId: 'AFT_RECEIPT_123'
+      })
+      .withQuoteLock({
+        srcCurrency: 'USD',
+        dstCurrency: 'GBP',
+        amountMinor: 10000 // £100.00
+      })
+      .forAmount({
+        currency: 'GBP',
+        valueMinor: 10000
+      })
+      .execute(idempotencyKey);
+
+    console.log('AFT successful:', receipt);
+    return receipt;
+  } catch (error) {
+    console.error('AFT failed:', error);
+    throw error;
+  }
+}
+```
+
+```python Python
+async def fund_card():
+    idempotency_key = f"aft_{int(time.time())}_{random.randint(1000, 9999)}"
+    
+    try:
+        receipt = await client.payouts.build() \
+            .to_card_via_alias(alias='+447911123456', alias_type='MOBILE') \
+            .with_funding_from_aft(
+                account_id='FINTRECH_ACCOUNT_789',
+                receipt_id='AFT_RECEIPT_123'
+            ) \
+            .with_quote_lock(
+                src_currency='USD',
+                dst_currency='GBP',
+                amount_minor=10000
+            ) \
+            .for_amount(currency='GBP', value_minor=10000) \
+            .execute(idempotency_key)
+
+        print('AFT successful:', receipt)
+        return receipt
+    except Exception as error:
+        print('AFT failed:', error)
+        raise error
+```
+</CodeGroup>
+
+### 3. Account Funding Example
+
+<CodeGroup>
+```typescript TypeScript
+async function fundAccount() {
+  const idempotencyKey = `aft_account_${Date.now()}`;
+  
+  try {
+    const receipt = await client.payouts.build()
+      .toAccount({
+        accountNumber: 'GB29NWBK60161331926819',
+        accountType: 'CHECKING',
+        bankCode: 'NWBK'
+      })
+      .withFundingFromAFT({
+        accountId: 'FINTRECH_ACCOUNT_789',
+        receiptId: 'AFT_RECEIPT_456'
+      })
+      .withCompliance({
+        customerId: 'CUST_12345',
+        transactionType: 'ACCOUNT_FUNDING',
+        riskLevel: 'LOW'
+      })
+      .forAmount({
+        currency: 'GBP',
+        valueMinor: 25000 // £250.00
+      })
+      .execute(idempotencyKey);
+
+    console.log('Account funding successful:', receipt);
+    return receipt;
+  } catch (error) {
+    console.error('Account funding failed:', error);
+    throw error;
+  }
+}
+```
+
+```python Python
+async def fund_account():
+    idempotency_key = f"aft_account_{int(time.time())}"
+    
+    try:
+        receipt = await client.payouts.build() \
+            .to_account(
+                account_number='GB29NWBK60161331926819',
+                account_type='CHECKING',
+                bank_code='NWBK'
+            ) \
+            .with_funding_from_aft(
+                account_id='FINTRECH_ACCOUNT_789',
+                receipt_id='AFT_RECEIPT_456'
+            ) \
+            .with_compliance(
+                customer_id='CUST_12345',
+                transaction_type='ACCOUNT_FUNDING',
+                risk_level='LOW'
+            ) \
+            .for_amount(currency='GBP', value_minor=25000) \
+            .execute(idempotency_key)
+
+        print('Account funding successful:', receipt)
+        return receipt
+    except Exception as error:
+        print('Account funding failed:', error)
+        raise error
+```
+</CodeGroup>
+
+## Error Handling
+
+### Common AFT Errors
+
+<CodeGroup>
+```typescript TypeScript
+import { 
+  ReceiptReusedError,
+  QuoteExpiredError,
+  ComplianceRejectedError,
+  InsufficientFundsError
+} from 'visa-direct-sdk';
+
+try {
+  await fundCard();
+} catch (error) {
+  switch (error.constructor) {
+    case ReceiptReusedError:
+      console.log('AFT receipt already used');
+      break;
+    case QuoteExpiredError:
+      console.log('FX quote expired, retry with new quote');
+      break;
+    case ComplianceRejectedError:
+      console.log('Compliance screening failed');
+      break;
+    case InsufficientFundsError:
+      console.log('Insufficient funds in source account');
+      break;
+    default:
+      console.log('Unexpected error:', error.message);
+  }
+}
+```
+
+```python Python
+from visa_direct_sdk.errors import (
+    ReceiptReusedError,
+    QuoteExpiredError,
+    ComplianceRejectedError,
+    InsufficientFundsError
+)
+
+try:
+    await fund_card()
+except ReceiptReusedError:
+    print('AFT receipt already used')
+except QuoteExpiredError:
+    print('FX quote expired, retry with new quote')
+except ComplianceRejectedError:
+    print('Compliance screening failed')
+except InsufficientFundsError:
+    print('Insufficient funds in source account')
+except Exception as e:
+    print('Unexpected error:', str(e))
+```
+</CodeGroup>
+
+## Security Considerations
+
+### Receipt Management
+- AFT receipts are single-use only
+- Store receipts securely with TTL
+- Implement proper cleanup policies
+
+### Compliance Integration
+- Screen all transactions before execution
+- Maintain audit trails
+- Handle regulatory requirements
+
+### FX Risk Management
+- Lock quotes before execution
+- Monitor quote expiration
+- Implement fallback strategies
+
+## Monitoring and Observability
+
+### Telemetry Integration
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenTelemetry } from 'visa-direct-sdk';
+
+const telemetry = new OpenTelemetry({
+  serviceName: 'fintech-aft-service',
+  version: '1.0.0',
+  endpoint: process.env.OTEL_ENDPOINT
+});
+
+// AFT transactions are automatically instrumented
+await fundCard(); // Metrics and traces sent automatically
+```
+
+```python Python
+from visa_direct_sdk.utils import OpenTelemetry
+
+telemetry = OpenTelemetry(
+    service_name='fintech-aft-service',
+    version='1.0.0',
+    endpoint=os.getenv('OTEL_ENDPOINT')
+)
+
+# AFT transactions are automatically instrumented
+await fund_card()  # Metrics and traces sent automatically
+```
+</CodeGroup>
+
+### Key Metrics to Monitor
+- AFT success/failure rates
+- Average processing time
+- FX quote utilization
+- Compliance screening results
+- Receipt reuse attempts
+
+## Testing Strategy
+
+### Unit Tests
+- Test individual components
+- Mock external dependencies
+- Validate error handling
+
+### Integration Tests
+- Test with simulator
+- Validate end-to-end flows
+- Test error scenarios
+
+### Load Testing
+- Test concurrent AFT requests
+- Validate idempotency under load
+- Monitor performance metrics
+
+## Production Deployment
+
+### Configuration
+- Use production Visa Direct endpoints
+- Enable all security features
+- Configure proper monitoring
+
+### Monitoring
+- Set up alerts for failures
+- Monitor transaction volumes
+- Track performance metrics
+
+### Backup Strategies
+- Implement retry mechanisms
+- Use circuit breakers
+- Plan for disaster recovery
+
+## Next Steps
+
+- Explore [API Reference](/api/payouts)
+- Learn about [Security Best Practices](/api/security)
+- Check out [TypeScript SDK Reference](/reference/typescript/overview)
